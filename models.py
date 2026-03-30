@@ -11,7 +11,7 @@ class Usuario(Base):
 
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    nome_adm = Column(String, nullable=False, unique=True, index=True)
+    nome_user = Column(String, nullable=False, unique=True, index=True)
     senha = Column(String, nullable=False)
     cargo = Column(String, nullable=False)
 
