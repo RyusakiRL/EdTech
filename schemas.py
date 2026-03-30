@@ -3,14 +3,14 @@
 from pydantic import BaseModel
 
 
-class Usuario(BaseModel):
+class Usuario_validar(BaseModel):
     """Validacao de dados para criacao de usuario no SQL"""
 
     nome_user = str
     senha = str
 
 
-class Cursos(BaseModel):
+class Cursos_validar(BaseModel):
     """Validacao de dados para criacao de cursos no SQL"""
 
     titulo = str
