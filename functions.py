@@ -92,9 +92,39 @@ def criar_matricula(confirmacao_login: str, curso_nome: str, db: Session):
     if not existencia_estudante.cargo == "estudante":
         raise HTTPException(
             status_code=403,
-            detail="Apenas estudantes autorizados a se cadastrar em uma aula",
+            detail="Apenas estudantes sao autorizados a se cadastrar em uma aula",
         )
 
     existencia_curso = db.query(Curso).filter(Curso.titulo == curso_nome).first()
     if not existencia_curso:
         raise HTTPException(status_code=404, detail="Curso nao encontrado")
+    ja_matriculado = (
+        db.query(Matricula)
+        .filter(
+            Matricula.id_aluno == existencia_estudante.id,
+            Matricula.id_curso == existencia_curso.id,
+        )
+        .first()
+    )
+    if ja_matriculado:
+        raise HTTPException(
+            status_code=403,
+            detail="Estudante ja matriculado nessa aula",
+        )
+    nova_matricula = Matricula(
+        id_aluno=existencia_estudante.id, id_curso=existencia_curso.id
+    )
+
+    db.add(nova_matricula)
+    db.commit()
+    db.refresh(nova_matricula)
+    return {"mensagem": "Matricula realizada com sucesso"}
+
+
+def listar_cursos(db: Session):
+    """Lista os cursos de cada professor"""
+    cursos_de_cada_instrutor = (
+        db.query(Curso).options(joinedload(Curso.instrutor)).all()
+    )
+
+    return cursos_de_cada_instrutor
