@@ -1,3 +1,7 @@
 venv/
 __pycache__/
 *.db
+# Arquivo de variaveis de ambiente
+.env
+.pytest_cache/
+uploads/

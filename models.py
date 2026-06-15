@@ -29,7 +29,20 @@ class Curso(Base):
     id_instrutor = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     instrutor = relationship("Usuario", back_populates="cursos_criados")
-    alunos_matriculados = relationship("Matricula", back_populates="matriculas")
+    alunos_matriculados = relationship("Matricula", back_populates="curso")
+    aulas = relationship("Aula", back_populates="curso")
+
+
+class Aula(Base):
+    """Tabela para a criacao do caminho dos arquivos"""
+
+    __tablename__ = "aulas"
+    id = Column(Integer, primary_key=True, index=True)
+    titulo = Column(String, nullable=False)
+    caminho_arquivo = Column(String, nullable=False)
+    id_curso = Column(Integer, ForeignKey("cursos.id"))
+
+    curso = relationship("Curso", back_populates="aulas")
 
 
 class Matricula(Base):

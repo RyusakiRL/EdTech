@@ -2,16 +2,20 @@
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+import os
+from dotenv import load_dotenv
 
-URL_DATA = "sqlite:///cursos_gerenciamento.db"
-engine = create_engine(URL_DATA, echo=False, connect_args={"check_same_thread": False})
+load_dotenv()
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+URL_DATA = os.getenv("DATABASE_URL")
+engine = create_engine(URL_DATA, echo=False)
+
+SESSIONLOCAL = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def get_db():
     """Retornar a conexao de forma segura com o yield e finally"""
-    db = SessionLocal()
+    db = SESSIONLOCAL()
     try:
         yield db
     finally:

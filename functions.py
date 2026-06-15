@@ -1,11 +1,18 @@
 """Funcoes do sistema"""
 
-from fastapi import HTTPException
+import shutil
+from pathlib import Path
+from fastapi import HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
-from models import Curso, Matricula, Usuario
+from models import Curso, Matricula, Usuario, Aula
 from schemas import CursosValidar, UsuarioValidar
 from security import verificar_senha, gerar_hash_senha
 from security import criar_token_jwt
+
+PASTA_UPLOADS = Path("uploads")
+
+PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
 def criar_estudante(estudante: UsuarioValidar, db: Session):
@@ -30,7 +37,9 @@ def criar_instrutor(instrutor: UsuarioValidar, confirmacao_login: str, db: Sessi
     validacao_nome_adm = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
-    if not validacao_nome_adm.cargo == "administrador":
+    if not validacao_nome_adm:
+        raise HTTPException(status_code=404, detail="admnistrador nao encontrado")
+    if validacao_nome_adm.cargo != "administrador":
         raise HTTPException(
             status_code=403,
             detail="Acesso negado: apenas admnistradores podem criar instrutores na plataforma",
@@ -68,6 +77,8 @@ def criar_curso(confirmacao_login: str, db: Session, dados_curso: CursosValidar)
     validacao_nome_instrutor = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
+    if not validacao_nome_instrutor:
+        raise HTTPException(status_code=404, detail="Instrutor nao encontrado")
     if not validacao_nome_instrutor.cargo == "instrutor":
         raise HTTPException(
             status_code=403,
@@ -89,6 +100,11 @@ def criar_matricula(confirmacao_login: str, curso_nome: str, db: Session):
     existencia_estudante = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
+    if not existencia_estudante:
+        raise HTTPException(
+            status_code=403,
+            detail="Estudante nao encontrado",
+        )
     if not existencia_estudante.cargo == "estudante":
         raise HTTPException(
             status_code=403,
@@ -128,3 +144,73 @@ def listar_cursos(db: Session):
     )
 
     return cursos_de_cada_instrutor
+
+
+def adicionar_aula_curso(
+    db: Session, curso_id: int, titulo_aula: str, arquive: UploadFile, nome_usuario: str
+):
+    """Faz o upload do arquivo e vincula a um curso do banco de dados"""
+    instrutor_logado = (
+        db.query(Usuario).filter(Usuario.nome_user == nome_usuario).first()
+    )
+
+    if not instrutor_logado or instrutor_logado.cargo != "instrutor":
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso negado: apenas instrutores",
+        )
+    curso_alvo = db.query(Curso).filter(Curso.id == curso_id).first()
+    if not curso_alvo:
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso negado: curso inexistente",
+        )
+    if curso_alvo.id_instrutor != instrutor_logado.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso negado: Você não é o dono deste curso",
+        )
+    caminho_destino = PASTA_UPLOADS / arquive.filename
+    with caminho_destino.open("wb") as buffer:
+        shutil.copyfileobj(arquive.file, buffer)
+
+    nova_aula = Aula(
+        titulo=titulo_aula,
+        caminho_arquivo=str(caminho_destino),
+        id_curso=curso_alvo.id,
+    )
+    db.add(nova_aula)
+    db.commit()
+    db.refresh(nova_aula)
+    return {"mensagem": f"Aula '{titulo_aula}' adicionada com sucesso ao curso!"}
+
+
+def listar_aulas_do_curso(db: Session, curso_id: int):
+    """Retorna a lista de aulas em JSON vinculadas a um curso especifico"""
+    curso = db.query(Curso).filter(Curso.id == curso_id).first()
+    if not curso:
+        raise HTTPException(
+            status_code=403,
+            detail="Nenhum curso encontrado",
+        )
+    aulas = db.query(Aula).filter(Aula.id_curso == curso_id).all()
+    return aulas
+
+
+def baixar_arquivo_aula(db: Session, aula_id: int):
+    """Devolve o arquivo para visualizacao/download"""
+    aula = db.query(Aula).filter(Aula.id == aula_id).first()
+    if not aula:
+        raise HTTPException(
+            status_code=403,
+            detail="Aula nao encontrada",
+        )
+    caminho_arquivo = Path(aula.caminho_arquivo)
+    if not caminho_arquivo.exists():
+        raise HTTPException(
+            status_code=404, detail="O arquivo físico nao existe/sumiu do servidor"
+        )
+
+    return FileResponse(
+        path=caminho_arquivo, filename=aula.titulo + caminho_arquivo.suffix
+    )

@@ -5,10 +5,12 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
+import os
+from dotenv import load_dotenv
 
-SECRET_KEY = (
-    "uma_senha_completamente_aleatoria_ultra_mega_gigantenorme_asdjfeqwhfwbsfvbsvbsc"
-)
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACESS_TOKEN_EXPIRE_MINUTOS = 30
 
@@ -45,7 +47,7 @@ def criar_token_jwt(dados: dict):
     return token_codificado
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 def verificar_token(token: str = Depends(oauth2_scheme)):
