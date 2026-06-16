@@ -1,5 +1,5 @@
 # 🎓 Plataforma EdTech API (RESTful)
-
+🟢 **Status:** Online | **Acesse a API ao vivo:** [EdTech API - Swagger UI](https://edtech-5f6u.onrender.com)
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql)
@@ -34,7 +34,7 @@ O grande diferencial desta arquitetura é o seu sistema de **Controle de Acesso 
 
 Clone este repositório e acesse a pasta do projeto:
 ```bash
-git clone [https://github.com/RyusakiRL/EdTech.git](https://github.com/RyusakiRL/EdTech.git)
+git clone https://github.com/RyusakiRL/EdTech.git
 cd EdTech
 
 ### 1. Ativar o ambiente virtual
