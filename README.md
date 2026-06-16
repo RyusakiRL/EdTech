@@ -36,7 +36,6 @@ Clone este repositório e acesse a pasta do projeto:
 ```bash
 git clone https://github.com/RyusakiRL/EdTech.git
 cd EdTech
-
 ### 1. Ativar o ambiente virtual
 python -m venv venv
 # No Windows:
