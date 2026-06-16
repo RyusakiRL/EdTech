@@ -4,6 +4,7 @@ from typing import List
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, Depends, Form
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from functions import (
@@ -21,6 +22,11 @@ from schemas import CursosValidar, UsuarioValidar, ModelResponseCursos
 from security import verificar_token
 
 app = FastAPI()
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 
 @app.post("/login")
