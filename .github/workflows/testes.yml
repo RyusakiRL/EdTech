@@ -9,6 +9,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    # CRIAMOS UM ".ENV" FALSO SÓ PARA O ROBÔ USAR
+    env:
+      DATABASE_URL: "sqlite:///./test_temp.db"
+      SECRET_KEY: "senha_secreta_temporaria_para_testes"
 
     steps:
     - name: Baixando o repositório
