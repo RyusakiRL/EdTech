@@ -26,11 +26,12 @@ app = FastAPI()
 
 @app.get("/", include_in_schema=False)
 def root():
+    """Connects the system in a Render"""
     return RedirectResponse(url="/docs")
 
 
 @app.post("/login")
-def rota_login(
+def login_route(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
     """Rota de login do sistema"""
@@ -45,7 +46,7 @@ PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
 @app.post("/cursos/{curso_id}/aulas")
-def receber_arquivos_endpoint(
+def receive_files_endpoint(
     curso_id: int,
     titulo_aula: str = Form(...),
     arquivo_upload: UploadFile = File(...),
@@ -64,7 +65,7 @@ def receber_arquivos_endpoint(
 
 
 @app.post("/registro/aluno")
-def criar_estudante_endpoint(
+def create_student_endpoint(
     estudante_registro: UsuarioValidar, db: Session = Depends(get_db)
 ):
     """Rota publica para registro de estudantes"""
@@ -73,7 +74,7 @@ def criar_estudante_endpoint(
 
 
 @app.post("/registro/instrutor")
-def criar_instrutor_endpoint(
+def create_instructor_endpoint(
     instrutor_registro: UsuarioValidar,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
@@ -85,7 +86,7 @@ def criar_instrutor_endpoint(
 
 
 @app.post("/registro/curso")
-def criar_curso_endpoint(
+def create_course_endpoint(
     curso_registro: CursosValidar,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
@@ -98,7 +99,7 @@ def criar_curso_endpoint(
 
 
 @app.get("/curso/matricula")
-def criar_matricula_endpoint(
+def create_registration_endpoint(
     nome_curso: str,
     db: Session = Depends(get_db),
     username_login: str = Depends(verificar_token),
@@ -111,19 +112,19 @@ def criar_matricula_endpoint(
 
 
 @app.get("/curso/lista", response_model=List[ModelResponseCursos])
-def listar_cursos_endpoint(db: Session = Depends(get_db)):
+def list_courses_endpoint(db: Session = Depends(get_db)):
     """Lista os cursos disponiveis"""
     return listar_cursos(db=db)
 
 
 @app.get("/cursos/{curso_id}/aulas")
-def listar_aulas_endpoint(curso_id: int, db: Session = Depends(get_db)):
+def list_classes_endpoint(curso_id: int, db: Session = Depends(get_db)):
     """Lista as aulas em formato JSON"""
     return listar_aulas_do_curso(db=db, curso_id=curso_id)
 
 
 @app.get("/aulas/{aula_id}/download")
-def baixar_aula_endpoint(
+def download_class_endpoint(
     aula_id: int,
     db: Session = Depends(get_db),
     login_str: str = Depends(verificar_token),
