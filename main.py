@@ -8,15 +8,15 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from functions import (
-    criar_curso,
-    criar_estudante,
-    criar_instrutor,
-    criar_matricula,
-    listar_cursos,
+    create_course,
+    create_students,
+    create_instructor,
+    create_registration,
+    list_courses,
     login,
-    adicionar_aula_curso,
-    listar_aulas_do_curso,
-    baixar_arquivo_aula,
+    add_class_course,
+    list_course_classes,
+    download_file_of_class,
 )
 from schemas import CursosValidar, UsuarioValidar, ModelResponseCursos
 from security import verificar_token
@@ -55,7 +55,7 @@ def receive_files_endpoint(
 ):
     """Recebe os arquivos em uma pasta chamada upload"""
 
-    return adicionar_aula_curso(
+    return add_class_course(
         db=db,
         arquive=file_upload,
         curso_id=course_id,
@@ -70,7 +70,7 @@ def create_student_endpoint(
 ):
     """Rota publica para registro de estudantes"""
 
-    return criar_estudante(db=db, estudante=student_register)
+    return create_students(db=db, estudante=student_register)
 
 
 @app.post("/registro/instrutor")
@@ -80,7 +80,7 @@ def create_instructor_endpoint(
     db: Session = Depends(get_db),
 ):
     """Rota privada para admnistradores registrarem novos instrutores para o site"""
-    return criar_instrutor(
+    return create_instructor(
         instrutor=register_of_instructor, confirmacao_login=username_login, db=db
     )
 
@@ -93,7 +93,7 @@ def create_course_endpoint(
 ):
     """Rota privada a qual apenas o instrutor pode criar o curso"""
 
-    return criar_curso(
+    return create_course(
         confirmacao_login=username_login, dados_curso=registration_course, db=db
     )
 
@@ -106,7 +106,7 @@ def create_registration_endpoint(
 ):
     """Rota privada para estudantes  para registrar a matricula em alguma aula"""
 
-    return criar_matricula(
+    return create_registration(
         confirmacao_login=username_login, curso_nome=course_name, db=db
     )
 
@@ -114,13 +114,13 @@ def create_registration_endpoint(
 @app.get("/curso/lista", response_model=List[ModelResponseCursos])
 def list_courses_endpoint(db: Session = Depends(get_db)):
     """Lista os cursos disponiveis"""
-    return listar_cursos(db=db)
+    return list_courses(db=db)
 
 
 @app.get("/cursos/{curso_id}/aulas")
 def list_classes_endpoint(course_id: int, db: Session = Depends(get_db)):
     """Lista as aulas em formato JSON"""
-    return listar_aulas_do_curso(db=db, curso_id=course_id)
+    return list_course_classes(db=db, curso_id=course_id)
 
 
 @app.get("/aulas/{aula_id}/download")
@@ -130,4 +130,4 @@ def download_class_endpoint(
     login_str: str = Depends(verificar_token),
 ):
     """Rota privada: o aluno precisa estar logado para baixar o arquivo da aula"""
-    return baixar_arquivo_aula(aula_id=class_id, db=db)
+    return download_file_of_class(aula_id=class_id, db=db)

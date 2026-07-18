@@ -15,7 +15,7 @@ PASTA_UPLOADS = Path("uploads")
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
-def criar_estudante(estudante: UsuarioValidar, db: Session):
+def create_students(estudante: UsuarioValidar, db: Session):
     """Permite pessoas criar um estudante para acessar os cursos"""
     existencia_estudante = (
         db.query(Usuario).filter(Usuario.nome_user == estudante.nome_user).first()
@@ -32,7 +32,7 @@ def criar_estudante(estudante: UsuarioValidar, db: Session):
     return {"mensagem": "Seja bem vindo a nossa plataforma"}
 
 
-def criar_instrutor(instrutor: UsuarioValidar, confirmacao_login: str, db: Session):
+def create_instructor(instrutor: UsuarioValidar, confirmacao_login: str, db: Session):
     """Cria o instrutor que sera o responsavel por gerenciar notas, progresso, curso"""
     validacao_nome_adm = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
@@ -72,7 +72,7 @@ def login(db: Session, username: str, senha: str):
     return {"access_token": token, "token_type": "bearer"}
 
 
-def criar_curso(confirmacao_login: str, db: Session, dados_curso: CursosValidar):
+def create_course(confirmacao_login: str, db: Session, dados_curso: CursosValidar):
     """O Instrutor consegue criar o curso e impede outros cargos de criarem"""
     validacao_nome_instrutor = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
@@ -95,7 +95,7 @@ def criar_curso(confirmacao_login: str, db: Session, dados_curso: CursosValidar)
     return {"mensagem": "Curso criado com sucesso"}
 
 
-def criar_matricula(confirmacao_login: str, curso_nome: str, db: Session):
+def create_registration(confirmacao_login: str, curso_nome: str, db: Session):
     """Fornece a possibilidade do aluno criar a matricula nos cursos ja existentes"""
     existencia_estudante = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
@@ -137,7 +137,7 @@ def criar_matricula(confirmacao_login: str, curso_nome: str, db: Session):
     return {"mensagem": "Matricula realizada com sucesso"}
 
 
-def listar_cursos(db: Session):
+def list_courses(db: Session):
     """Lista os cursos de cada professor"""
     cursos_de_cada_instrutor = (
         db.query(Curso).options(joinedload(Curso.instrutor)).all()
@@ -146,7 +146,7 @@ def listar_cursos(db: Session):
     return cursos_de_cada_instrutor
 
 
-def adicionar_aula_curso(
+def add_class_course(
     db: Session, curso_id: int, titulo_aula: str, arquive: UploadFile, nome_usuario: str
 ):
     """Faz o upload do arquivo e vincula a um curso do banco de dados"""
@@ -185,7 +185,7 @@ def adicionar_aula_curso(
     return {"mensagem": f"Aula '{titulo_aula}' adicionada com sucesso ao curso!"}
 
 
-def listar_aulas_do_curso(db: Session, curso_id: int):
+def list_course_classes(db: Session, curso_id: int):
     """Retorna a lista de aulas em JSON vinculadas a um curso especifico"""
     curso = db.query(Curso).filter(Curso.id == curso_id).first()
     if not curso:
@@ -197,7 +197,7 @@ def listar_aulas_do_curso(db: Session, curso_id: int):
     return aulas
 
 
-def baixar_arquivo_aula(db: Session, aula_id: int):
+def download_file_of_class(db: Session, aula_id: int):
     """Devolve o arquivo para visualizacao/download"""
     aula = db.query(Aula).filter(Aula.id == aula_id).first()
     if not aula:
