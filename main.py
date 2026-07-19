@@ -34,7 +34,7 @@ def root():
 def login_route(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
-    """Rota de login do sistema"""
+    """System route of login"""
     login_name = form_data.username
     login_password = form_data.password
     return login(db=db, username=login_name, senha=login_password)
@@ -45,7 +45,7 @@ PASTA_UPLOADS = Path("uploads")
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
-@app.post("/cursos/{curso_id}/aulas")
+@app.post("/courses/{course_id}/class")
 def receive_files_endpoint(
     course_id: int,
     class_title: str = Form(...),
@@ -53,7 +53,7 @@ def receive_files_endpoint(
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
 ):
-    """Recebe os arquivos em uma pasta chamada upload"""
+    """Receive the files in a past named upload"""
 
     return add_class_course(
         db=db,
@@ -64,62 +64,62 @@ def receive_files_endpoint(
     )
 
 
-@app.post("/registro/aluno")
+@app.post("/registration/student")
 def create_student_endpoint(
     student_register: UsuarioValidar, db: Session = Depends(get_db)
 ):
-    """Rota publica para registro de estudantes"""
+    """Pulic route to register students"""
 
     return create_students(db=db, estudante=student_register)
 
 
-@app.post("/registro/instrutor")
+@app.post("/registration/instructor")
 def create_instructor_endpoint(
     register_of_instructor: UsuarioValidar,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
 ):
-    """Rota privada para admnistradores registrarem novos instrutores para o site"""
+    """Private route for admnistrators to registry new instructors"""
     return create_instructor(
         instrutor=register_of_instructor, confirmacao_login=username_login, db=db
     )
 
 
-@app.post("/registro/curso")
+@app.post("/registration/course")
 def create_course_endpoint(
     registration_course: CursosValidar,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
 ):
-    """Rota privada a qual apenas o instrutor pode criar o curso"""
+    """Private route for only instructors create a course"""
 
     return create_course(
         confirmacao_login=username_login, dados_curso=registration_course, db=db
     )
 
 
-@app.get("/curso/matricula")
+@app.get("/course/registry")
 def create_registration_endpoint(
     course_name: str,
     db: Session = Depends(get_db),
     username_login: str = Depends(verificar_token),
 ):
-    """Rota privada para estudantes  para registrar a matricula em alguma aula"""
+    """Private route for students to registry in a course"""
 
     return create_registration(
         confirmacao_login=username_login, curso_nome=course_name, db=db
     )
 
 
-@app.get("/curso/lista", response_model=List[ModelResponseCursos])
+@app.get("/course/list", response_model=List[ModelResponseCursos])
 def list_courses_endpoint(db: Session = Depends(get_db)):
-    """Lista os cursos disponiveis"""
+    """List the available courses"""
     return list_courses(db=db)
 
 
-@app.get("/cursos/{curso_id}/aulas")
+@app.get("/courses/{course_id}/class")
 def list_classes_endpoint(course_id: int, db: Session = Depends(get_db)):
-    """Lista as aulas em formato JSON"""
+    """List class in format JSON"""
     return list_course_classes(db=db, curso_id=course_id)
 
 
@@ -129,5 +129,5 @@ def download_class_endpoint(
     db: Session = Depends(get_db),
     login_str: str = Depends(verificar_token),
 ):
-    """Rota privada: o aluno precisa estar logado para baixar o arquivo da aula"""
+    """Private route: the student need to stay logged to download the files of class"""
     return download_file_of_class(aula_id=class_id, db=db)
