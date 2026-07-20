@@ -16,7 +16,7 @@ PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
 def create_students(estudante: UsuarioValidar, db: Session):
-    """Permite pessoas criar um estudante para acessar os cursos"""
+    """Allow peoples for create a student to acess the courses"""
     existencia_estudante = (
         db.query(Usuario).filter(Usuario.nome_user == estudante.nome_user).first()
     )
@@ -33,7 +33,7 @@ def create_students(estudante: UsuarioValidar, db: Session):
 
 
 def create_instructor(instrutor: UsuarioValidar, confirmacao_login: str, db: Session):
-    """Cria o instrutor que sera o responsavel por gerenciar notas, progresso, curso"""
+    """Create a instructor route, responsability of this role: manage grades, progress and courses"""
     validacao_nome_adm = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
@@ -61,7 +61,7 @@ def create_instructor(instrutor: UsuarioValidar, confirmacao_login: str, db: Ses
 
 
 def login(db: Session, username: str, senha: str):
-    """Login no sistema e retorna o token"""
+    """Login in system and return the token"""
     existencia = db.query(Usuario).filter(Usuario.nome_user == username).first()
     if not existencia:
         raise HTTPException(status_code=404, detail="Credencial invalida")
@@ -73,7 +73,7 @@ def login(db: Session, username: str, senha: str):
 
 
 def create_course(confirmacao_login: str, db: Session, dados_curso: CursosValidar):
-    """O Instrutor consegue criar o curso e impede outros cargos de criarem"""
+    """The instructor can create a course, and block others roles to create a course"""
     validacao_nome_instrutor = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
@@ -96,7 +96,7 @@ def create_course(confirmacao_login: str, db: Session, dados_curso: CursosValida
 
 
 def create_registration(confirmacao_login: str, curso_nome: str, db: Session):
-    """Fornece a possibilidade do aluno criar a matricula nos cursos ja existentes"""
+    """Enable students to enroll in existing courses."""
     existencia_estudante = (
         db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
     )
@@ -138,7 +138,7 @@ def create_registration(confirmacao_login: str, curso_nome: str, db: Session):
 
 
 def list_courses(db: Session):
-    """Lista os cursos de cada professor"""
+    """Lists the courses for each teacher"""
     cursos_de_cada_instrutor = (
         db.query(Curso).options(joinedload(Curso.instrutor)).all()
     )
@@ -149,7 +149,7 @@ def list_courses(db: Session):
 def add_class_course(
     db: Session, curso_id: int, titulo_aula: str, arquive: UploadFile, nome_usuario: str
 ):
-    """Faz o upload do arquivo e vincula a um curso do banco de dados"""
+    """Uploads the file and links it to a course in the database."""
     instrutor_logado = (
         db.query(Usuario).filter(Usuario.nome_user == nome_usuario).first()
     )
@@ -186,7 +186,9 @@ def add_class_course(
 
 
 def list_course_classes(db: Session, curso_id: int):
-    """Retorna a lista de aulas em JSON vinculadas a um curso especifico"""
+    """
+    65
+    Returns the list of lessons in JSON format linked to a specific course."""
     curso = db.query(Curso).filter(Curso.id == curso_id).first()
     if not curso:
         raise HTTPException(
@@ -198,7 +200,7 @@ def list_course_classes(db: Session, curso_id: int):
 
 
 def download_file_of_class(db: Session, aula_id: int):
-    """Devolve o arquivo para visualizacao/download"""
+    """Returns the file for viewing/downloading."""
     aula = db.query(Aula).filter(Aula.id == aula_id).first()
     if not aula:
         raise HTTPException(
