@@ -70,7 +70,7 @@ def create_student_endpoint(
 ):
     """Pulic route to register students"""
 
-    return create_students(db=db, estudante=student_register)
+    return create_students(db=db, student=student_register)
 
 
 @app.post("/registration/instructor")
@@ -81,7 +81,7 @@ def create_instructor_endpoint(
 ):
     """Private route for admnistrators to registry new instructors"""
     return create_instructor(
-        instrutor=register_of_instructor, confirmacao_login=username_login, db=db
+        instructor=register_of_instructor, login_confirmation=username_login, db=db
     )
 
 

@@ -15,49 +15,51 @@ PASTA_UPLOADS = Path("uploads")
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
-def create_students(estudante: UsuarioValidar, db: Session):
+def create_students(student: UsuarioValidar, db: Session):
     """Allow peoples for create a student to acess the courses"""
-    existencia_estudante = (
-        db.query(Usuario).filter(Usuario.nome_user == estudante.nome_user).first()
+    student_existance = (
+        db.query(Usuario).filter(Usuario.nome_user == student.nome_user).first()
     )
-    if existencia_estudante:
-        raise HTTPException(status_code=400, detail="Nome ja existente, insira outro")
-    senha_cript = gerar_hash_senha(estudante.senha)
-    novo_estudante = Usuario(
-        nome_user=estudante.nome_user, senha=senha_cript, cargo="estudante"
+    if student_existance:
+        raise HTTPException(
+            status_code=400, detail="Name already exists; please enter another one."
+        )
+    password_cript = gerar_hash_senha(student.senha)
+    new_student = Usuario(
+        nome_user=student.nome_user, senha=password_cript, cargo="estudante"
     )
-    db.add(novo_estudante)
+    db.add(new_student)
     db.commit()
-    db.refresh(novo_estudante)
-    return {"mensagem": "Seja bem vindo a nossa plataforma"}
+    db.refresh(new_student)
+    return {"message": "Welcome to our platform."}
 
 
-def create_instructor(instrutor: UsuarioValidar, confirmacao_login: str, db: Session):
+def create_instructor(instructor: UsuarioValidar, login_confirmation: str, db: Session):
     """Create a instructor route, responsability of this role: manage grades, progress and courses"""
-    validacao_nome_adm = (
-        db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
+    name_validation_admnistrator = (
+        db.query(Usuario).filter(Usuario.nome_user == login_confirmation).first()
     )
-    if not validacao_nome_adm:
-        raise HTTPException(status_code=404, detail="admnistrador nao encontrado")
-    if validacao_nome_adm.cargo != "administrador":
+    if not name_validation_admnistrator:
+        raise HTTPException(status_code=404, detail="Administrator not encountered")
+    if name_validation_admnistrator.cargo != "administrador":
         raise HTTPException(
             status_code=403,
-            detail="Acesso negado: apenas admnistradores podem criar instrutores na plataforma",
+            detail="Acess denied: only admnistrator can create instructors on plataform",
         )
 
-    existencia_instrutor = (
-        db.query(Usuario).filter(Usuario.nome_user == instrutor.nome_user).first()
+    instructor_existence = (
+        db.query(Usuario).filter(Usuario.nome_user == instructor.nome_user).first()
     )
-    if existencia_instrutor:
-        raise HTTPException(status_code=400, detail="Nome ja existente, insira outro")
-    senha_criptografada = gerar_hash_senha(instrutor.senha)
-    novo_instrutor = Usuario(
-        nome_user=instrutor.nome_user, senha=senha_criptografada, cargo="instrutor"
+    if instructor_existence:
+        raise HTTPException(status_code=400, detail="Name already exists: insert other")
+    encrypted_password = gerar_hash_senha(instructor.senha)
+    new_instructor = Usuario(
+        nome_user=instructor.nome_user, senha=encrypted_password, cargo="instrutor"
     )
-    db.add(novo_instrutor)
+    db.add(new_instructor)
     db.commit()
-    db.refresh(novo_instrutor)
-    return {"mensagem": "Boas vindas ao novo instrutor"}
+    db.refresh(new_instructor)
+    return {"message": "Welcome to the new instructor"}
 
 
 def login(db: Session, username: str, senha: str):
