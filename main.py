@@ -37,7 +37,7 @@ def login_route(
     """System route of login"""
     login_name = form_data.username
     login_password = form_data.password
-    return login(db=db, username=login_name, senha=login_password)
+    return login(db=db, username=login_name, password=login_password)
 
 
 PASTA_UPLOADS = Path("uploads")
@@ -94,7 +94,7 @@ def create_course_endpoint(
     """Private route for only instructors create a course"""
 
     return create_course(
-        confirmacao_login=username_login, dados_curso=registration_course, db=db
+        login_confirmation=username_login, course_data=registration_course, db=db
     )
 
 
@@ -107,7 +107,7 @@ def create_registration_endpoint(
     """Private route for students to registry in a course"""
 
     return create_registration(
-        confirmacao_login=username_login, curso_nome=course_name, db=db
+        login_confirmation=username_login, course_name=course_name, db=db
     )
 
 

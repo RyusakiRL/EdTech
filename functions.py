@@ -62,81 +62,81 @@ def create_instructor(instructor: UsuarioValidar, login_confirmation: str, db: S
     return {"message": "Welcome to the new instructor"}
 
 
-def login(db: Session, username: str, senha: str):
+def login(db: Session, username: str, password: str):
     """Login in system and return the token"""
-    existencia = db.query(Usuario).filter(Usuario.nome_user == username).first()
-    if not existencia:
+    existence = db.query(Usuario).filter(Usuario.nome_user == username).first()
+    if not existence:
         raise HTTPException(status_code=404, detail="Credencial invalida")
-    senha_verificada = verificar_senha(senha, existencia.senha)
-    if not senha_verificada:
+    verified_password = verificar_senha(password, existence.senha)
+    if not verified_password:
         raise HTTPException(status_code=400, detail="Credencial invalida")
-    token = criar_token_jwt({"sub": existencia.nome_user})
+    token = criar_token_jwt({"sub": existence.nome_user})
     return {"access_token": token, "token_type": "bearer"}
 
 
-def create_course(confirmacao_login: str, db: Session, dados_curso: CursosValidar):
+def create_course(login_confirmation: str, db: Session, course_data: CursosValidar):
     """The instructor can create a course, and block others roles to create a course"""
-    validacao_nome_instrutor = (
-        db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
+    instructor_name_validation = (
+        db.query(Usuario).filter(Usuario.nome_user == login_confirmation).first()
     )
-    if not validacao_nome_instrutor:
-        raise HTTPException(status_code=404, detail="Instrutor nao encontrado")
-    if not validacao_nome_instrutor.cargo == "instrutor":
+    if not instructor_name_validation:
+        raise HTTPException(status_code=404, detail="Instructor not encountered")
+    if not instructor_name_validation.cargo == "instrutor":
         raise HTTPException(
             status_code=403,
-            detail="Acesso negado: apenas instrutores podem criar cursos",
+            detail="Acess denied: only instructors can create courses",
         )
-    novo_curso = Curso(
-        titulo=dados_curso.titulo,
-        descricao=dados_curso.descricao,
-        id_instrutor=validacao_nome_instrutor.id,
+    new_course = Curso(
+        titulo=course_data.titulo,
+        descricao=course_data.descricao,
+        id_instrutor=instructor_name_validation.id,
     )
-    db.add(novo_curso)
+    db.add(new_course)
     db.commit()
-    db.refresh(novo_curso)
-    return {"mensagem": "Curso criado com sucesso"}
+    db.refresh(new_course)
+    return {"message": "Course created with sucess"}
 
 
-def create_registration(confirmacao_login: str, curso_nome: str, db: Session):
+def create_registration(login_confirmation: str, course_name: str, db: Session):
     """Enable students to enroll in existing courses."""
-    existencia_estudante = (
-        db.query(Usuario).filter(Usuario.nome_user == confirmacao_login).first()
+    student_existence = (
+        db.query(Usuario).filter(Usuario.nome_user == login_confirmation).first()
     )
-    if not existencia_estudante:
+    if not student_existence:
         raise HTTPException(
             status_code=403,
-            detail="Estudante nao encontrado",
+            detail="Student not encountered",
         )
-    if not existencia_estudante.cargo == "estudante":
+    if not student_existence.cargo == "estudante":
         raise HTTPException(
             status_code=403,
-            detail="Apenas estudantes sao autorizados a se cadastrar em uma aula",
+            detail="Only students are allowed to cadastration in a class",
         )
 
-    existencia_curso = db.query(Curso).filter(Curso.titulo == curso_nome).first()
-    if not existencia_curso:
-        raise HTTPException(status_code=404, detail="Curso nao encontrado")
-    ja_matriculado = (
+    course_existence = db.query(Curso).filter(Curso.titulo == course_name).first()
+    if not course_existence:
+        raise HTTPException(status_code=404, detail="Not encountered course")
+    already_enrolled = (
         db.query(Matricula)
         .filter(
-            Matricula.id_aluno == existencia_estudante.id,
-            Matricula.id_curso == existencia_curso.id,
+            Matricula.id_aluno == student_existence.id,
+            Matricula.id_curso == course_existence.id,
         )
         .first()
     )
-    if ja_matriculado:
+    if already_enrolled:
         raise HTTPException(
             status_code=403,
-            detail="Estudante ja matriculado nessa aula",
+            detail="Student already enrolled in this class",
         )
-    nova_matricula = Matricula(
-        id_aluno=existencia_estudante.id, id_curso=existencia_curso.id
+    new_registration = Matricula(
+        id_aluno=student_existence.id, id_curso=course_existence.id
     )
 
-    db.add(nova_matricula)
+    db.add(new_registration)
     db.commit()
-    db.refresh(nova_matricula)
-    return {"mensagem": "Matricula realizada com sucesso"}
+    db.refresh(new_registration)
+    return {"message": "Registration realized with sucess"}
 
 
 def list_courses(db: Session):
