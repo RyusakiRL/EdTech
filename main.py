@@ -57,10 +57,10 @@ def receive_files_endpoint(
 
     return add_class_course(
         db=db,
-        arquive=file_upload,
-        curso_id=course_id,
-        nome_usuario=username_login,
-        titulo_aula=class_title,
+        file=file_upload,
+        course_id=course_id,
+        username=username_login,
+        class_title=class_title,
     )
 
 

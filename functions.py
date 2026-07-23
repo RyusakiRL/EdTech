@@ -141,50 +141,52 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
 
 def list_courses(db: Session):
     """Lists the courses for each teacher"""
-    cursos_de_cada_instrutor = (
+    courses_of_each_instructor = (
         db.query(Curso).options(joinedload(Curso.instrutor)).all()
     )
 
-    return cursos_de_cada_instrutor
+    return courses_of_each_instructor
 
 
 def add_class_course(
-    db: Session, curso_id: int, titulo_aula: str, arquive: UploadFile, nome_usuario: str
+    db: Session,
+    course_id: int,
+    class_title: str,
+    file: UploadFile,
+    username: str,
 ):
     """Uploads the file and links it to a course in the database."""
-    instrutor_logado = (
-        db.query(Usuario).filter(Usuario.nome_user == nome_usuario).first()
-    )
+    instrutor_logado = db.query(Usuario).filter(Usuario.nome_user == username).first()
 
     if not instrutor_logado or instrutor_logado.cargo != "instrutor":
         raise HTTPException(
             status_code=403,
-            detail="Acesso negado: apenas instrutores",
+            detail="Denied acess: only instructors",
         )
-    curso_alvo = db.query(Curso).filter(Curso.id == curso_id).first()
-    if not curso_alvo:
+    target_course = db.query(Curso).filter(Curso.id == course_id).first()
+    if not target_course:
         raise HTTPException(
             status_code=403,
-            detail="Acesso negado: curso inexistente",
+            detail="Denied acess: course not encountered",
         )
-    if curso_alvo.id_instrutor != instrutor_logado.id:
+    if target_course.id_instrutor != instrutor_logado.id:
         raise HTTPException(
             status_code=403,
-            detail="Acesso negado: Você não é o dono deste curso",
+            detail="Denied acess: You do not own this course.",
         )
-    caminho_destino = PASTA_UPLOADS / arquive.filename
-    with caminho_destino.open("wb") as buffer:
-        shutil.copyfileobj(arquive.file, buffer)
+    destin_path = PASTA_UPLOADS / file.filename
+    with destin_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
-    nova_aula = Aula(
-        titulo=titulo_aula,
-        caminho_arquivo=str(caminho_destino),
-        id_curso=curso_alvo.id,
+    new_class = Aula(
+        titulo=class_title,
+        caminho_arquivo=str(destin_path),
+        id_curso=target_course.id,
     )
-    db.add(nova_aula)
+    db.add(new_class)
     db.commit()
-    db.refresh(nova_aula)
-    return {"mensagem": f"Aula '{titulo_aula}' adicionada com sucesso ao curso!"}
+    db.refresh(new_class)
+    return {"message": f"Class '{class_title}' added with sucess in this course!"}
 
 
 def list_course_classes(db: Session, curso_id: int):
