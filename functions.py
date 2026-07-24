@@ -156,9 +156,9 @@ def add_class_course(
     username: str,
 ):
     """Uploads the file and links it to a course in the database."""
-    instrutor_logado = db.query(Usuario).filter(Usuario.nome_user == username).first()
+    instructor_logged = db.query(Usuario).filter(Usuario.nome_user == username).first()
 
-    if not instrutor_logado or instrutor_logado.cargo != "instrutor":
+    if not instructor_logged or instructor_logged.cargo != "instrutor":
         raise HTTPException(
             status_code=403,
             detail="Denied acess: only instructors",
@@ -169,7 +169,7 @@ def add_class_course(
             status_code=403,
             detail="Denied acess: course not encountered",
         )
-    if target_course.id_instrutor != instrutor_logado.id:
+    if target_course.id_instrutor != instructor_logged.id:
         raise HTTPException(
             status_code=403,
             detail="Denied acess: You do not own this course.",
