@@ -191,32 +191,30 @@ def add_class_course(
 
 def list_course_classes(db: Session, curso_id: int):
     """
-    65
     Returns the list of lessons in JSON format linked to a specific course."""
-    curso = db.query(Curso).filter(Curso.id == curso_id).first()
-    if not curso:
+    courses = db.query(Curso).filter(Curso.id == curso_id).first()
+    if not courses:
         raise HTTPException(
             status_code=403,
-            detail="Nenhum curso encontrado",
+            detail="No one course encountered",
         )
-    aulas = db.query(Aula).filter(Aula.id_curso == curso_id).all()
-    return aulas
+    classes = db.query(Aula).filter(Aula.id_curso == curso_id).all()
+    return classes
 
 
 def download_file_of_class(db: Session, aula_id: int):
     """Returns the file for viewing/downloading."""
-    aula = db.query(Aula).filter(Aula.id == aula_id).first()
-    if not aula:
+    classroom = db.query(Aula).filter(Aula.id == aula_id).first()
+    if not classroom:
         raise HTTPException(
             status_code=403,
-            detail="Aula nao encontrada",
+            detail="Class not encountered",
         )
-    caminho_arquivo = Path(aula.caminho_arquivo)
-    if not caminho_arquivo.exists():
+    file_path = Path(classroom.caminho_arquivo)
+    if not file_path.exists():
         raise HTTPException(
-            status_code=404, detail="O arquivo físico nao existe/sumiu do servidor"
+            status_code=404,
+            detail="The fisical file don't exists/It disappeared from the server.",
         )
 
-    return FileResponse(
-        path=caminho_arquivo, filename=aula.titulo + caminho_arquivo.suffix
-    )
+    return FileResponse(path=file_path, filename=classroom.titulo + file_path.suffix)
