@@ -15,7 +15,7 @@ db = next(get_db())
 
 def new_admnistrator(new_adm: UsuarioValidar, db_session: Session):
     """cria um novo admnistrador do sistema"""
-    if db_session.query(Usuario).filter(Usuario.nome_user == new_adm.nome_user).first():
+    if db_session.query(Usuario).filter(Usuario.name_user == new_adm.nome_user).first():
         print("Esse nome de admnistrador ja existe registre outro nome")
     else:
         senha_hash = gerar_hash_senha(new_adm.senha)

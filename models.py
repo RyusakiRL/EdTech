@@ -11,12 +11,12 @@ class Usuario(Base):
 
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    nome_user = Column(String, nullable=False, unique=True, index=True)
-    senha = Column(String, nullable=False)
-    cargo = Column(String, nullable=False)
+    name_user = Column(String, nullable=False, unique=True, index=True)
+    password_user = Column(String, nullable=False)
+    role_user = Column(String, nullable=False)
 
-    cursos_criados = relationship("Curso", back_populates="instrutor")
-    matriculas = relationship("Matricula", back_populates="aluno")
+    created_courses_relationship = relationship("Curso", back_populates="instrutor")
+    enrollments_relationship = relationship("Matricula", back_populates="aluno")
 
 
 class Curso(Base):
@@ -24,13 +24,13 @@ class Curso(Base):
 
     __tablename__ = "cursos"
     id = Column(Integer, primary_key=True, index=True)
-    titulo = Column(String, nullable=False)
-    descricao = Column(String, nullable=False)
+    course_title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
     id_instrutor = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    instrutor = relationship("Usuario", back_populates="cursos_criados")
-    alunos_matriculados = relationship("Matricula", back_populates="curso")
-    aulas = relationship("Aula", back_populates="curso")
+    instructor_relationship = relationship("Usuario", back_populates="cursos_criados")
+    enrollment_students_relationship = relationship("Matricula", back_populates="curso")
+    classes_relationship = relationship("Aula", back_populates="curso")
 
 
 class Aula(Base):
@@ -38,11 +38,11 @@ class Aula(Base):
 
     __tablename__ = "aulas"
     id = Column(Integer, primary_key=True, index=True)
-    titulo = Column(String, nullable=False)
-    caminho_arquivo = Column(String, nullable=False)
-    id_curso = Column(Integer, ForeignKey("cursos.id"))
+    classes_title = Column(String, nullable=False)
+    file_path_class = Column(String, nullable=False)
+    course_id = Column(Integer, ForeignKey("cursos.id"))
 
-    curso = relationship("Curso", back_populates="aulas")
+    course_relationship = relationship("Curso", back_populates="aulas")
 
 
 class Matricula(Base):
@@ -50,9 +50,9 @@ class Matricula(Base):
 
     __tablename__ = "matriculas"
     id = Column(Integer, primary_key=True, index=True)
-    progresso = Column(Float, default=0.0)
-    id_aluno = Column(Integer, ForeignKey("users.id"))
-    id_curso = Column(Integer, ForeignKey("cursos.id"))
+    progress = Column(Float, default=0.0)
+    student_id = Column(Integer, ForeignKey("users.id"))
+    course_id = Column(Integer, ForeignKey("cursos.id"))
 
-    aluno = relationship("Usuario", back_populates="matriculas")
-    curso = relationship("Curso", back_populates="alunos_matriculados")
+    student_relationship = relationship("Usuario", back_populates="matriculas")
+    course_relationship = relationship("Curso", back_populates="alunos_matriculados")
