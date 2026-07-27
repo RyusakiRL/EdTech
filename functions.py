@@ -6,7 +6,7 @@ from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
 from models import Curso, Matricula, Usuario, Aula
-from schemas import CursosValidar, UsuarioValidar
+from schemas import CoursesValidation, UserValidation
 from security import verificar_senha, gerar_hash_senha
 from security import criar_token_jwt
 
@@ -15,18 +15,18 @@ PASTA_UPLOADS = Path("uploads")
 PASTA_UPLOADS.mkdir(exist_ok=True)
 
 
-def create_students(student: UsuarioValidar, db: Session):
+def create_students(student: UserValidation, db: Session):
     """Allow peoples for create a student to acess the courses"""
     student_existance = (
-        db.query(Usuario).filter(Usuario.name_user == student.nome_user).first()
+        db.query(Usuario).filter(Usuario.name_user == student.user_name).first()
     )
     if student_existance:
         raise HTTPException(
             status_code=400, detail="Name already exists; please enter another one."
         )
-    password_cript = gerar_hash_senha(student.senha)
+    password_cript = gerar_hash_senha(student.password_model)
     new_student = Usuario(
-        nome_user=student.nome_user, senha=password_cript, cargo="estudante"
+        nome_user=student.user_name, senha=password_cript, cargo="estudante"
     )
     db.add(new_student)
     db.commit()
@@ -34,8 +34,8 @@ def create_students(student: UsuarioValidar, db: Session):
     return {"message": "Welcome to our platform."}
 
 
-def create_instructor(instructor: UsuarioValidar, login_confirmation: str, db: Session):
-    """Create a instructor route, responsability of this role: manage grades, progress and courses"""
+def create_instructor(instructor: UserValidation, login_confirmation: str, db: Session):
+    """Create a instructor route, responsability: manage grades, progress and courses"""
     name_validation_admnistrator = (
         db.query(Usuario).filter(Usuario.name_user == login_confirmation).first()
     )
@@ -48,13 +48,13 @@ def create_instructor(instructor: UsuarioValidar, login_confirmation: str, db: S
         )
 
     instructor_existence = (
-        db.query(Usuario).filter(Usuario.name_user == instructor.nome_user).first()
+        db.query(Usuario).filter(Usuario.name_user == instructor.user_name).first()
     )
     if instructor_existence:
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
-    encrypted_password = gerar_hash_senha(instructor.senha)
+    encrypted_password = gerar_hash_senha(instructor.password_model)
     new_instructor = Usuario(
-        nome_user=instructor.nome_user, senha=encrypted_password, cargo="instrutor"
+        nome_user=instructor.user_name, senha=encrypted_password, cargo="instrutor"
     )
     db.add(new_instructor)
     db.commit()
@@ -74,7 +74,7 @@ def login(db: Session, username: str, password: str):
     return {"access_token": token, "token_type": "bearer"}
 
 
-def create_course(login_confirmation: str, db: Session, course_data: CursosValidar):
+def create_course(login_confirmation: str, db: Session, course_data: CoursesValidation):
     """The instructor can create a course, and block others roles to create a course"""
     instructor_name_validation = (
         db.query(Usuario).filter(Usuario.name_user == login_confirmation).first()
@@ -87,8 +87,8 @@ def create_course(login_confirmation: str, db: Session, course_data: CursosValid
             detail="Acess denied: only instructors can create courses",
         )
     new_course = Curso(
-        titulo=course_data.titulo,
-        descricao=course_data.descricao,
+        titulo=course_data.title_model,
+        descricao=course_data.description_model,
         id_instrutor=instructor_name_validation.id,
     )
     db.add(new_course)

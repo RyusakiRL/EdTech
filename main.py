@@ -18,7 +18,7 @@ from functions import (
     list_course_classes,
     download_file_of_class,
 )
-from schemas import CursosValidar, UsuarioValidar, ModelResponseCursos
+from schemas import CoursesValidation, UserValidation, ModelResponseCursos
 from security import verificar_token
 
 app = FastAPI()
@@ -66,7 +66,7 @@ def receive_files_endpoint(
 
 @app.post("/registration/student")
 def create_student_endpoint(
-    student_register: UsuarioValidar, db: Session = Depends(get_db)
+    student_register: UserValidation, db: Session = Depends(get_db)
 ):
     """Pulic route to register students"""
 
@@ -75,7 +75,7 @@ def create_student_endpoint(
 
 @app.post("/registration/instructor")
 def create_instructor_endpoint(
-    register_of_instructor: UsuarioValidar,
+    register_of_instructor: UserValidation,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
 ):
@@ -87,7 +87,7 @@ def create_instructor_endpoint(
 
 @app.post("/registration/course")
 def create_course_endpoint(
-    registration_course: CursosValidar,
+    registration_course: CoursesValidation,
     username_login: str = Depends(verificar_token),
     db: Session = Depends(get_db),
 ):

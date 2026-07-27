@@ -1,29 +1,31 @@
-"""Valida os dados que serao entregues"""
+"""Data validation based em class models"""
 
 from pydantic import BaseModel
 
 
-class UsuarioValidar(BaseModel):
-    """Validacao de dados para criacao de usuario no SQL"""
+class UserValidation(BaseModel):
+    """Data validation for user creation in SQL"""
 
-    nome_user: str
-    senha: str
-
-
-class CursosValidar(BaseModel):
-    """Validacao de dados para criacao de cursos no SQL"""
-
-    titulo: str
-    descricao: str
+    user_name: str
+    password_model: str
 
 
-class InstrutorResponse(BaseModel):
-    nome_user: str
+class CoursesValidation(BaseModel):
+    """Data validation for courses creation in SQL"""
+
+    title_model: str
+    description_model: str
+
+
+class InstructorResponse(BaseModel):
+    """Response model for instructors list"""
+
+    username_model: str
 
 
 class ModelResponseCursos(BaseModel):
-    """Modelo de resposta para a lista de dados dos cursos existentes"""
+    """Response model for data list of courses"""
 
-    titulo: str
-    descricao: str
-    instrutor: InstrutorResponse
+    title_model: str
+    description_model: str
+    instructor: InstructorResponse
