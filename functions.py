@@ -26,7 +26,7 @@ def create_students(student: UserValidation, db: Session):
         )
     password_cript = gerar_hash_senha(student.password_model)
     new_student = Usuario(
-        nome_user=student.user_name, senha=password_cript, cargo="estudante"
+        name_user=student.user_name, senha=password_cript, cargo="estudante"
     )
     db.add(new_student)
     db.commit()
