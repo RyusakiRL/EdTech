@@ -6,7 +6,7 @@ from sqlalchemy import Integer, String, ForeignKey, Float, Column
 Base = declarative_base()
 
 
-class Usuario(Base):
+class User(Base):
     """Molde de criacao de usuario"""
 
     __tablename__ = "users"
@@ -15,44 +15,60 @@ class Usuario(Base):
     password_user = Column(String, nullable=False)
     role_user = Column(String, nullable=False)
 
-    created_courses_relationship = relationship("Curso", back_populates="instrutor")
-    enrollments_relationship = relationship("Matricula", back_populates="aluno")
+    created_courses_relationship = relationship(
+        "Course", back_populates="instructor_relationship"
+    )
+    enrollments_relationship = relationship(
+        "Registration", back_populates="student_relationship"
+    )
 
 
-class Curso(Base):
+class Course(Base):
     """Molde para criacao dos cursos"""
 
-    __tablename__ = "cursos"
+    __tablename__ = "courses"
     id = Column(Integer, primary_key=True, index=True)
     course_title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    id_instrutor = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id_instructor = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    instructor_relationship = relationship("Usuario", back_populates="cursos_criados")
-    enrollment_students_relationship = relationship("Matricula", back_populates="curso")
-    classes_relationship = relationship("Aula", back_populates="curso")
+    instructor_relationship = relationship(
+        "User", back_populates="created_courses_relationship"
+    )
+    enrollment_students_relationship = relationship(
+        "Registration", back_populates="course_relationship"
+    )
+    classes_relationship = relationship(
+        "Lesson", back_populates="course_class_relationship"
+    )
 
 
-class Aula(Base):
+class Lesson(Base):
     """Tabela para a criacao do caminho dos arquivos"""
 
-    __tablename__ = "aulas"
+    __tablename__ = "classes"
     id = Column(Integer, primary_key=True, index=True)
     classes_title = Column(String, nullable=False)
     file_path_class = Column(String, nullable=False)
-    course_id = Column(Integer, ForeignKey("cursos.id"))
+    course_id = Column(Integer, ForeignKey("courses.id"))
 
-    course_relationship = relationship("Curso", back_populates="aulas")
+    course_class_relationship = relationship(
+        "Course", back_populates="classes_relationship"
+    )
 
 
-class Matricula(Base):
+class Registration(Base):
     """Tabela que cria os cursos que um usuario esta matriculado"""
 
-    __tablename__ = "matriculas"
+    __tablename__ = "enrollments"
     id = Column(Integer, primary_key=True, index=True)
     progress = Column(Float, default=0.0)
     student_id = Column(Integer, ForeignKey("users.id"))
-    course_id = Column(Integer, ForeignKey("cursos.id"))
+    course_id = Column(Integer, ForeignKey("courses.id"))
 
-    student_relationship = relationship("Usuario", back_populates="matriculas")
-    course_relationship = relationship("Curso", back_populates="alunos_matriculados")
+    student_relationship = relationship(
+        "User", back_populates="enrollments_relationship"
+    )
+    course_relationship = relationship(
+        "Course", back_populates="enrollment_students_relationship"
+    )
