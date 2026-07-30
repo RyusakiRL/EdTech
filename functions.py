@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
-from models import Course, Registration, User, Classes
+from models import Course, Registration, User, Lesson
 from schemas import CoursesValidation, UserValidation
 from security import verificar_senha, gerar_hash_senha
 from security import criar_token_jwt
@@ -180,7 +180,7 @@ def add_class_course(
     with destin_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    new_class = Classes(
+    new_class = Lesson(
         titulo=class_title,
         caminho_arquivo=str(destin_path),
         id_curso=target_course.id,
@@ -200,13 +200,13 @@ def list_course_classes(db: Session, curso_id: int):
             status_code=403,
             detail="No one course encountered",
         )
-    classes = db.query(Classes).filter(Classes.course_id == curso_id).all()
+    classes = db.query(Lesson).filter(Lesson.course_id == curso_id).all()
     return classes
 
 
 def download_file_of_class(db: Session, aula_id: int):
     """Returns the file for viewing/downloading."""
-    classroom = db.query(Classes).filter(Classes.id == aula_id).first()
+    classroom = db.query(Lesson).filter(Lesson.id == aula_id).first()
     if not classroom:
         raise HTTPException(
             status_code=403,
