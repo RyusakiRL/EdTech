@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
-from models import Curso, Matricula, Usuario, Aula
+from models import Course, Registration, User, Classes
 from schemas import CoursesValidation, UserValidation
 from security import verificar_senha, gerar_hash_senha
 from security import criar_token_jwt
@@ -18,14 +18,14 @@ PASTA_UPLOADS.mkdir(exist_ok=True)
 def create_students(student: UserValidation, db: Session):
     """Allow peoples for create a student to acess the courses"""
     student_existance = (
-        db.query(Usuario).filter(Usuario.name_user == student.user_name).first()
+        db.query(User).filter(User.name_user == student.user_name).first()
     )
     if student_existance:
         raise HTTPException(
             status_code=400, detail="Name already exists; please enter another one."
         )
     password_cript = gerar_hash_senha(student.password_model)
-    new_student = Usuario(
+    new_student = User(
         name_user=student.user_name, senha=password_cript, cargo="estudante"
     )
     db.add(new_student)
@@ -37,7 +37,7 @@ def create_students(student: UserValidation, db: Session):
 def create_instructor(instructor: UserValidation, login_confirmation: str, db: Session):
     """Create a instructor route, responsability: manage grades, progress and courses"""
     name_validation_admnistrator = (
-        db.query(Usuario).filter(Usuario.name_user == login_confirmation).first()
+        db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not name_validation_admnistrator:
         raise HTTPException(status_code=404, detail="Administrator not encountered")
@@ -48,12 +48,12 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
         )
 
     instructor_existence = (
-        db.query(Usuario).filter(Usuario.name_user == instructor.user_name).first()
+        db.query(User).filter(User.name_user == instructor.user_name).first()
     )
     if instructor_existence:
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
     encrypted_password = gerar_hash_senha(instructor.password_model)
-    new_instructor = Usuario(
+    new_instructor = User(
         nome_user=instructor.user_name, senha=encrypted_password, cargo="instrutor"
     )
     db.add(new_instructor)
@@ -64,7 +64,7 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
 
 def login(db: Session, username: str, password: str):
     """Login in system and return the token"""
-    existence = db.query(Usuario).filter(Usuario.name_user == username).first()
+    existence = db.query(User).filter(User.name_user == username).first()
     if not existence:
         raise HTTPException(status_code=404, detail="Credencial invalida")
     verified_password = verificar_senha(password, existence.password_user)
@@ -77,7 +77,7 @@ def login(db: Session, username: str, password: str):
 def create_course(login_confirmation: str, db: Session, course_data: CoursesValidation):
     """The instructor can create a course, and block others roles to create a course"""
     instructor_name_validation = (
-        db.query(Usuario).filter(Usuario.name_user == login_confirmation).first()
+        db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not instructor_name_validation:
         raise HTTPException(status_code=404, detail="Instructor not encountered")
@@ -86,7 +86,7 @@ def create_course(login_confirmation: str, db: Session, course_data: CoursesVali
             status_code=403,
             detail="Acess denied: only instructors can create courses",
         )
-    new_course = Curso(
+    new_course = Course(
         titulo=course_data.title_model,
         descricao=course_data.description_model,
         id_instrutor=instructor_name_validation.id,
@@ -100,7 +100,7 @@ def create_course(login_confirmation: str, db: Session, course_data: CoursesVali
 def create_registration(login_confirmation: str, course_name: str, db: Session):
     """Enable students to enroll in existing courses."""
     student_existence = (
-        db.query(Usuario).filter(Usuario.name_user == login_confirmation).first()
+        db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not student_existence:
         raise HTTPException(
@@ -113,14 +113,16 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
             detail="Only students are allowed to cadastration in a class",
         )
 
-    course_existence = db.query(Curso).filter(Curso.course_title == course_name).first()
+    course_existence = (
+        db.query(Course).filter(Course.course_title == course_name).first()
+    )
     if not course_existence:
         raise HTTPException(status_code=404, detail="Not encountered course")
     already_enrolled = (
-        db.query(Matricula)
+        db.query(Registration)
         .filter(
-            Matricula.student_id == student_existence.id,
-            Matricula.course_id == course_existence.id,
+            Registration.student_id == student_existence.id,
+            Registration.course_id == course_existence.id,
         )
         .first()
     )
@@ -129,7 +131,7 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
             status_code=403,
             detail="Student already enrolled in this class",
         )
-    new_registration = Matricula(
+    new_registration = Registration(
         id_aluno=student_existence.id, id_curso=course_existence.id
     )
 
@@ -142,7 +144,7 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
 def list_courses(db: Session):
     """Lists the courses for each teacher"""
     courses_of_each_instructor = (
-        db.query(Curso).options(joinedload(Curso.instructor_relationship)).all()
+        db.query(Course).options(joinedload(Course.instructor_relationship)).all()
     )
 
     return courses_of_each_instructor
@@ -156,14 +158,14 @@ def add_class_course(
     username: str,
 ):
     """Uploads the file and links it to a course in the database."""
-    instructor_logged = db.query(Usuario).filter(Usuario.name_user == username).first()
+    instructor_logged = db.query(User).filter(User.name_user == username).first()
 
     if not instructor_logged or instructor_logged.role_user != "instrutor":
         raise HTTPException(
             status_code=403,
             detail="Denied acess: only instructors",
         )
-    target_course = db.query(Curso).filter(Curso.id == course_id).first()
+    target_course = db.query(Course).filter(Course.id == course_id).first()
     if not target_course:
         raise HTTPException(
             status_code=403,
@@ -178,7 +180,7 @@ def add_class_course(
     with destin_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    new_class = Aula(
+    new_class = Classes(
         titulo=class_title,
         caminho_arquivo=str(destin_path),
         id_curso=target_course.id,
@@ -192,19 +194,19 @@ def add_class_course(
 def list_course_classes(db: Session, curso_id: int):
     """
     Returns the list of lessons in JSON format linked to a specific course."""
-    courses = db.query(Curso).filter(Curso.id == curso_id).first()
+    courses = db.query(Course).filter(Course.id == curso_id).first()
     if not courses:
         raise HTTPException(
             status_code=403,
             detail="No one course encountered",
         )
-    classes = db.query(Aula).filter(Aula.course_id == curso_id).all()
+    classes = db.query(Classes).filter(Classes.course_id == curso_id).all()
     return classes
 
 
 def download_file_of_class(db: Session, aula_id: int):
     """Returns the file for viewing/downloading."""
-    classroom = db.query(Aula).filter(Aula.id == aula_id).first()
+    classroom = db.query(Classes).filter(Classes.id == aula_id).first()
     if not classroom:
         raise HTTPException(
             status_code=403,
