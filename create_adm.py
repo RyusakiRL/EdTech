@@ -1,7 +1,7 @@
 """Cria um administrador para checar as informacoes do sistema"""
 
 from sqlalchemy.orm import Session
-from models import Usuario
+from models import User
 from schemas import UserValidation
 from security import gerar_hash_senha
 from database import get_db
@@ -14,14 +14,14 @@ db = next(get_db())
 
 
 def new_admnistrator(new_adm: UserValidation, db_session: Session):
-    """cria um novo admnistrador do sistema"""
-    if db_session.query(Usuario).filter(Usuario.name_user == new_adm.user_name).first():
+    """Create a new admnistrator in the system"""
+    if db_session.query(User).filter(User.name_user == new_adm.user_name).first():
         print("This name already exists input a other name")
     else:
         senha_hash = gerar_hash_senha(new_adm.password_model)
 
-        creation_of_new_admnistrator = Usuario(
-            nome_user=new_adm.user_name, senha=senha_hash, cargo=ROLE
+        creation_of_new_admnistrator = User(
+            name_user=new_adm.user_name, password_user=senha_hash, role_user=ROLE
         )
 
         db_session.add(creation_of_new_admnistrator)
