@@ -26,7 +26,7 @@ def create_students(student: UserValidation, db: Session):
         )
     password_cript = gerar_hash_senha(student.password_model)
     new_student = User(
-        name_user=student.user_name, senha=password_cript, cargo="estudante"
+        name_user=student.user_name, password_user=password_cript, role_user="estudante"
     )
     db.add(new_student)
     db.commit()
@@ -54,7 +54,9 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
     encrypted_password = gerar_hash_senha(instructor.password_model)
     new_instructor = User(
-        nome_user=instructor.user_name, senha=encrypted_password, cargo="instrutor"
+        nome_user=instructor.user_name,
+        password_user=encrypted_password,
+        role_user="instrutor",
     )
     db.add(new_instructor)
     db.commit()
