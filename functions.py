@@ -89,9 +89,9 @@ def create_course(login_confirmation: str, db: Session, course_data: CoursesVali
             detail="Acess denied: only instructors can create courses",
         )
     new_course = Course(
-        titulo=course_data.title_model,
-        descricao=course_data.description_model,
-        id_instrutor=instructor_name_validation.id,
+        course_title=course_data.title_model,
+        description=course_data.description_model,
+        id_instructor=instructor_name_validation.id,
     )
     db.add(new_course)
     db.commit()
