@@ -54,7 +54,7 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
     encrypted_password = gerar_hash_senha(instructor.password_model)
     new_instructor = User(
-        nome_user=instructor.user_name,
+        name_user=instructor.user_name,
         password_user=encrypted_password,
         role_user="instrutor",
     )
@@ -134,7 +134,7 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
             detail="Student already enrolled in this class",
         )
     new_registration = Registration(
-        id_aluno=student_existence.id, id_curso=course_existence.id
+        student_id=student_existence.id, course_id=course_existence.id
     )
 
     db.add(new_registration)
