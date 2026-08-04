@@ -26,7 +26,7 @@ def create_students(student: UserValidation, db: Session):
         )
     password_cript = gerar_hash_senha(student.password_model)
     new_student = User(
-        name_user=student.user_name, password_user=password_cript, role_user="estudante"
+        name_user=student.user_name, password_user=password_cript, role_user="student"
     )
     db.add(new_student)
     db.commit()
@@ -41,7 +41,7 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
     )
     if not name_validation_admnistrator:
         raise HTTPException(status_code=404, detail="Administrator not encountered")
-    if name_validation_admnistrator.role_user != "administrador":
+    if name_validation_admnistrator.role_user != "administrator":
         raise HTTPException(
             status_code=403,
             detail="Acess denied: only admnistrator can create instructors on plataform",
@@ -56,7 +56,7 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
     new_instructor = User(
         name_user=instructor.user_name,
         password_user=encrypted_password,
-        role_user="instrutor",
+        role_user="instructor",
     )
     db.add(new_instructor)
     db.commit()
@@ -68,10 +68,10 @@ def login(db: Session, username: str, password: str):
     """Login in system and return the token"""
     existence = db.query(User).filter(User.name_user == username).first()
     if not existence:
-        raise HTTPException(status_code=404, detail="Credencial invalida")
+        raise HTTPException(status_code=404, detail="Invalid credential")
     verified_password = verificar_senha(password, existence.password_user)
     if not verified_password:
-        raise HTTPException(status_code=400, detail="Credencial invalida")
+        raise HTTPException(status_code=400, detail="Invalid credential")
     token = criar_token_jwt({"sub": existence.name_user})
     return {"access_token": token, "token_type": "bearer"}
 
@@ -83,7 +83,7 @@ def create_course(login_confirmation: str, db: Session, course_data: CoursesVali
     )
     if not instructor_name_validation:
         raise HTTPException(status_code=404, detail="Instructor not encountered")
-    if not instructor_name_validation.role_user == "instrutor":
+    if not instructor_name_validation.role_user == "instructor":
         raise HTTPException(
             status_code=403,
             detail="Acess denied: only instructors can create courses",
@@ -109,7 +109,7 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
             status_code=403,
             detail="Student not encountered",
         )
-    if not student_existence.role_user == "estudante":
+    if not student_existence.role_user == "student":
         raise HTTPException(
             status_code=403,
             detail="Only students are allowed to cadastration in a class",
@@ -162,7 +162,7 @@ def add_class_course(
     """Uploads the file and links it to a course in the database."""
     instructor_logged = db.query(User).filter(User.name_user == username).first()
 
-    if not instructor_logged or instructor_logged.role_user != "instrutor":
+    if not instructor_logged or instructor_logged.role_user != "instructor":
         raise HTTPException(
             status_code=403,
             detail="Denied acess: only instructors",
@@ -183,9 +183,9 @@ def add_class_course(
         shutil.copyfileobj(file.file, buffer)
 
     new_class = Lesson(
-        titulo=class_title,
-        caminho_arquivo=str(destin_path),
-        id_curso=target_course.id,
+        classes_title=class_title,
+        file_path_class=str(destin_path),
+        course_id=target_course.id,
     )
     db.add(new_class)
     db.commit()
