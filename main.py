@@ -120,7 +120,7 @@ def list_courses_endpoint(db: Session = Depends(get_db)):
 @app.get("/courses/{course_id}/class")
 def list_classes_endpoint(course_id: int, db: Session = Depends(get_db)):
     """List class in format JSON"""
-    return list_course_classes(db=db, curso_id=course_id)
+    return list_course_classes(db=db, course_id=course_id)
 
 
 @app.get("/aulas/{aula_id}/download")
@@ -130,4 +130,4 @@ def download_class_endpoint(
     login_str: str = Depends(verificar_token),
 ):
     """Private route: the student need to stay logged to download the files of class"""
-    return download_file_of_class(aula_id=class_id, db=db)
+    return download_file_of_class(class_id=class_id, db=db)

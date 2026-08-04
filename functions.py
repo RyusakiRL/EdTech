@@ -173,7 +173,7 @@ def add_class_course(
             status_code=403,
             detail="Denied acess: course not encountered",
         )
-    if target_course.id_instrutor != instructor_logged.id:
+    if target_course.id_instructor != instructor_logged.id:
         raise HTTPException(
             status_code=403,
             detail="Denied acess: You do not own this course.",
@@ -193,22 +193,22 @@ def add_class_course(
     return {"message": f"Class '{class_title}' added with sucess in this course!"}
 
 
-def list_course_classes(db: Session, curso_id: int):
+def list_course_classes(db: Session, course_id: int):
     """
     Returns the list of lessons in JSON format linked to a specific course."""
-    courses = db.query(Course).filter(Course.id == curso_id).first()
+    courses = db.query(Course).filter(Course.id == course_id).first()
     if not courses:
         raise HTTPException(
             status_code=403,
             detail="No one course encountered",
         )
-    classes = db.query(Lesson).filter(Lesson.course_id == curso_id).all()
+    classes = db.query(Lesson).filter(Lesson.course_id == course_id).all()
     return classes
 
 
-def download_file_of_class(db: Session, aula_id: int):
+def download_file_of_class(db: Session, class_id: int):
     """Returns the file for viewing/downloading."""
-    classroom = db.query(Lesson).filter(Lesson.id == aula_id).first()
+    classroom = db.query(Lesson).filter(Lesson.id == class_id).first()
     if not classroom:
         raise HTTPException(
             status_code=403,
