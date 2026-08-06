@@ -1,6 +1,6 @@
 """Data validation based em class models"""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UserValidation(BaseModel):
@@ -8,6 +8,7 @@ class UserValidation(BaseModel):
 
     user_name: str
     password_model: str
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CoursesValidation(BaseModel):
@@ -20,12 +21,12 @@ class CoursesValidation(BaseModel):
 class InstructorResponse(BaseModel):
     """Response model for instructors list"""
 
-    username_model: str
+    name_user: str
 
 
 class ModelResponseCursos(BaseModel):
     """Response model for data list of courses"""
 
-    title_model: str
-    description_model: str
+    course_title: str
+    description: str
     instructor: InstructorResponse
