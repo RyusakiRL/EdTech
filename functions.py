@@ -40,8 +40,8 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
         db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not name_validation_admnistrator:
-        raise HTTPException(status_code=404, detail="administrator not found")
-    if name_validation_admnistrator.role_user != "administrator":
+        raise HTTPException(status_code=404, detail="admnistrator not found")
+    if name_validation_admnistrator.role_user != "admnistrator":
         raise HTTPException(
             status_code=403,
             detail="Access denied: only admnistrator can create instructors on plataform",
@@ -140,7 +140,7 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
     db.add(new_registration)
     db.commit()
     db.refresh(new_registration)
-    return {"message": "Registration realized with sucess"}
+    return {"message": "Registration realized with success"}
 
 
 def list_courses(db: Session):
@@ -190,7 +190,7 @@ def add_class_course(
     db.add(new_class)
     db.commit()
     db.refresh(new_class)
-    return {"message": f"Class '{class_title}' added with sucess in this course!"}
+    return {"message": f"Class '{class_title}' added with success in this course!"}
 
 
 def list_course_classes(db: Session, course_id: int):

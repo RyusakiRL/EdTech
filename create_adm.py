@@ -6,7 +6,7 @@ from schemas import UserValidation
 from security import generator_hash_password
 from database import get_db
 
-ROLE = "administrator"
+ROLE = "admnistrator"
 ADM_NAME = str(input("Input the name of new system admnistrator: "))
 ADM_PASSWORD = str(input("Input the password of new system admnistrator: "))
 new_administrator = UserValidation(user_name=ADM_NAME, password_model=ADM_PASSWORD)
@@ -27,8 +27,8 @@ def new_admnistrator(new_adm: UserValidation, db_session: Session):
         db_session.add(creation_of_new_admnistrator)
         db_session.commit()
         db_session.refresh(creation_of_new_admnistrator)
-        print("Sucess in adm creation")
-    return {"Sucess in adm creation"}
+        print("Sucess in admnistrator creation")
+    return {"Sucess in admnistrator creation"}
 
 
 new_admnistrator(new_adm=new_administrator, db_session=db)

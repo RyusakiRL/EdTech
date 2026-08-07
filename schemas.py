@@ -8,7 +8,6 @@ class UserValidation(BaseModel):
 
     user_name: str
     password_model: str
-    model_config = ConfigDict(from_attributes=True)
 
 
 class CoursesValidation(BaseModel):
@@ -22,6 +21,7 @@ class InstructorResponse(BaseModel):
     """Response model for instructors list"""
 
     name_user: str
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ModelResponseCursos(BaseModel):
@@ -30,3 +30,4 @@ class ModelResponseCursos(BaseModel):
     course_title: str
     description: str
     instructor: InstructorResponse
+    model_config = ConfigDict(from_attributes=True)
