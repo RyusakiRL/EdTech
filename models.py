@@ -1,4 +1,4 @@
-"""Moldes de criacao da tabela SQL"""
+"""Table creation templates in SQL"""
 
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Integer, String, ForeignKey, Float, Column
@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    """Molde de criacao de usuario"""
+    """Template for user creation"""
 
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -24,7 +24,7 @@ class User(Base):
 
 
 class Course(Base):
-    """Molde para criacao dos cursos"""
+    """Template for courses creation"""
 
     __tablename__ = "courses"
     id = Column(Integer, primary_key=True, index=True)
@@ -44,7 +44,7 @@ class Course(Base):
 
 
 class Lesson(Base):
-    """Tabela para a criacao do caminho dos arquivos"""
+    """Table template for file path creation"""
 
     __tablename__ = "classes"
     id = Column(Integer, primary_key=True, index=True)
@@ -58,7 +58,7 @@ class Lesson(Base):
 
 
 class Registration(Base):
-    """Tabela que cria os cursos que um usuario esta matriculado"""
+    """Table template for enrollment creation"""
 
     __tablename__ = "enrollments"
     id = Column(Integer, primary_key=True, index=True)

@@ -1,4 +1,4 @@
-"""Cria a Sessao do banco de dados e retorna a conexao de forma segura"""
+"""Create a database session and return the security connection"""
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -14,7 +14,7 @@ SESSIONLOCAL = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def get_db():
-    """Retornar a conexao de forma segura com o yield e finally"""
+    """Return the connection of security form using yield and finally"""
     db = SESSIONLOCAL()
     try:
         yield db

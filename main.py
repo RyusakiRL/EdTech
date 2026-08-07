@@ -19,7 +19,7 @@ from functions import (
     download_file_of_class,
 )
 from schemas import CoursesValidation, UserValidation, ModelResponseCursos
-from security import verificar_token
+from security import verify_token
 
 app = FastAPI()
 
@@ -50,7 +50,7 @@ def receive_files_endpoint(
     course_id: int,
     class_title: str = Form(...),
     file_upload: UploadFile = File(...),
-    username_login: str = Depends(verificar_token),
+    username_login: str = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Receive the files in a past named upload"""
@@ -76,7 +76,7 @@ def create_student_endpoint(
 @app.post("/registration/instructor")
 def create_instructor_endpoint(
     register_of_instructor: UserValidation,
-    username_login: str = Depends(verificar_token),
+    username_login: str = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Private route for admnistrators to registry new instructors"""
@@ -88,7 +88,7 @@ def create_instructor_endpoint(
 @app.post("/registration/course")
 def create_course_endpoint(
     registration_course: CoursesValidation,
-    username_login: str = Depends(verificar_token),
+    username_login: str = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Private route for only instructors create a course"""
@@ -102,7 +102,7 @@ def create_course_endpoint(
 def create_registration_endpoint(
     course_name: str,
     db: Session = Depends(get_db),
-    username_login: str = Depends(verificar_token),
+    username_login: str = Depends(verify_token),
 ):
     """Private route for students to registry in a course"""
 
@@ -123,11 +123,11 @@ def list_classes_endpoint(course_id: int, db: Session = Depends(get_db)):
     return list_course_classes(db=db, course_id=course_id)
 
 
-@app.get("/aulas/{aula_id}/download")
+@app.get("/class/{class_id}/download")
 def download_class_endpoint(
     class_id: int,
     db: Session = Depends(get_db),
-    login_str: str = Depends(verificar_token),
+    login_str: str = Depends(verify_token),
 ):
     """Private route: the student need to stay logged to download the files of class"""
     return download_file_of_class(class_id=class_id, db=db)

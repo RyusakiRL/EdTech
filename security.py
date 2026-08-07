@@ -12,48 +12,47 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACESS_TOKEN_EXPIRE_MINUTOS = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def gerar_hash_senha(senha: str) -> str:
+def generator_hash_password(password: str) -> str:
     """
-    Recebe a senha em texto puro (ex: '123456')
-    e retorna o Hash ilegível para salvarmos no banco.
+    Receive the password in pure text and return ilegible Hash to save in database
     """
-    return pwd_context.hash(senha)
+    return pwd_context.hash(password)
 
 
-def verificar_senha(senha_texto_puro: str, senha_hasheada: str) -> bool:
+def verify_password(password_pure_text: str, hashed_password: str) -> bool:
     """
-    Compara a senha que o usuário digitou no login com o Hash que está salvo no banco.
-    Retorna True se a senha estiver correta, ou False se estiver errada.
+    Compare the password entered by the user during login with the hash stored in the database.
+    Returns True if the password is correct, or False if it is incorrect.
     """
-    return pwd_context.verify(senha_texto_puro, senha_hasheada)
+    return pwd_context.verify(password_pure_text, hashed_password)
 
 
-def criar_token_jwt(dados: dict):
-    """Gera o crachá digital (Token JWT) para o usuário."""
-    dados_para_codificar = dados.copy()
+def create_token_jwt(data: dict):
+    """Generates the digital badge (JWT Token) for the user."""
+    data_encoding = data.copy()
 
-    expiracao = datetime.now(timezone.utc) + timedelta(
-        minutes=ACESS_TOKEN_EXPIRE_MINUTOS
+    expiration = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    dados_para_codificar.update({"exp": expiracao})
+    data_encoding.update({"exp": expiration})
 
-    token_codificado = jwt.encode(dados_para_codificar, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_token = jwt.encode(data_encoding, SECRET_KEY, algorithm=ALGORITHM)
 
-    return token_codificado
+    return encoded_token
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
-def verificar_token(token: str = Depends(oauth2_scheme)):
-    """Lê o crachá JWT e descobre quem é o dono."""
+def verify_token(token: str = Depends(oauth2_scheme)):
+    """Read the digital badge JWT and find your owner"""
 
-    excecao_nao_autorizado = HTTPException(
+    exception_not_authorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Crachá inválido ou expirado",
         headers={"WWW-Authenticate": "Bearer"},
@@ -63,13 +62,13 @@ def verificar_token(token: str = Depends(oauth2_scheme)):
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        nome_user: str = payload.get("sub")
+        user_name: str = payload.get("sub")
 
-        if nome_user is None:
-            raise excecao_nao_autorizado
+        if user_name is None:
+            raise exception_not_authorized
 
-        return nome_user
+        return user_name
 
-    except JWTError as erro_original:
+    except JWTError as original_error:
 
-        raise excecao_nao_autorizado from erro_original
+        raise exception_not_authorized from original_error

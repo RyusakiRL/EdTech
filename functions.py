@@ -1,4 +1,4 @@
-"""Funcoes do sistema"""
+"""System Functions"""
 
 import shutil
 from pathlib import Path
@@ -7,8 +7,8 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
 from models import Course, Registration, User, Lesson
 from schemas import CoursesValidation, UserValidation
-from security import verificar_senha, gerar_hash_senha
-from security import criar_token_jwt
+from security import verify_password, generator_hash_password
+from security import create_token_jwt
 
 PASTA_UPLOADS = Path("uploads")
 
@@ -22,9 +22,9 @@ def create_students(student: UserValidation, db: Session):
     )
     if student_existance:
         raise HTTPException(
-            status_code=400, detail="Name already exists; please enter another one."
+            status_code=400, detail="Name already exists: please enter another one."
         )
-    password_cript = gerar_hash_senha(student.password_model)
+    password_cript = generator_hash_password(student.password_model)
     new_student = User(
         name_user=student.user_name, password_user=password_cript, role_user="student"
     )
@@ -40,11 +40,11 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
         db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not name_validation_admnistrator:
-        raise HTTPException(status_code=404, detail="Administrator not encountered")
+        raise HTTPException(status_code=404, detail="administrator not found")
     if name_validation_admnistrator.role_user != "administrator":
         raise HTTPException(
             status_code=403,
-            detail="Acess denied: only admnistrator can create instructors on plataform",
+            detail="Access denied: only admnistrator can create instructors on plataform",
         )
 
     instructor_existence = (
@@ -52,7 +52,7 @@ def create_instructor(instructor: UserValidation, login_confirmation: str, db: S
     )
     if instructor_existence:
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
-    encrypted_password = gerar_hash_senha(instructor.password_model)
+    encrypted_password = generator_hash_password(instructor.password_model)
     new_instructor = User(
         name_user=instructor.user_name,
         password_user=encrypted_password,
@@ -69,10 +69,10 @@ def login(db: Session, username: str, password: str):
     existence = db.query(User).filter(User.name_user == username).first()
     if not existence:
         raise HTTPException(status_code=404, detail="Invalid credential")
-    verified_password = verificar_senha(password, existence.password_user)
+    verified_password = verify_password(password, existence.password_user)
     if not verified_password:
         raise HTTPException(status_code=400, detail="Invalid credential")
-    token = criar_token_jwt({"sub": existence.name_user})
+    token = create_token_jwt({"sub": existence.name_user})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -82,11 +82,11 @@ def create_course(login_confirmation: str, db: Session, course_data: CoursesVali
         db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not instructor_name_validation:
-        raise HTTPException(status_code=404, detail="Instructor not encountered")
+        raise HTTPException(status_code=404, detail="Instructor not found")
     if not instructor_name_validation.role_user == "instructor":
         raise HTTPException(
             status_code=403,
-            detail="Acess denied: only instructors can create courses",
+            detail="Access denied: only instructors can create courses",
         )
     new_course = Course(
         course_title=course_data.title_model,
@@ -107,19 +107,19 @@ def create_registration(login_confirmation: str, course_name: str, db: Session):
     if not student_existence:
         raise HTTPException(
             status_code=403,
-            detail="Student not encountered",
+            detail="Student not found",
         )
     if not student_existence.role_user == "student":
         raise HTTPException(
             status_code=403,
-            detail="Only students are allowed to cadastration in a class",
+            detail="Only students are allowed to registration in a class",
         )
 
     course_existence = (
         db.query(Course).filter(Course.course_title == course_name).first()
     )
     if not course_existence:
-        raise HTTPException(status_code=404, detail="Not encountered course")
+        raise HTTPException(status_code=404, detail="Course not found")
     already_enrolled = (
         db.query(Registration)
         .filter(
@@ -165,18 +165,18 @@ def add_class_course(
     if not instructor_logged or instructor_logged.role_user != "instructor":
         raise HTTPException(
             status_code=403,
-            detail="Denied acess: only instructors",
+            detail="Denied access: only instructors",
         )
     target_course = db.query(Course).filter(Course.id == course_id).first()
     if not target_course:
         raise HTTPException(
             status_code=403,
-            detail="Denied acess: course not encountered",
+            detail="Denied access: course not found",
         )
     if target_course.id_instructor != instructor_logged.id:
         raise HTTPException(
             status_code=403,
-            detail="Denied acess: You do not own this course.",
+            detail="Denied access: You do not own this course.",
         )
     destin_path = PASTA_UPLOADS / file.filename
     with destin_path.open("wb") as buffer:
@@ -200,7 +200,7 @@ def list_course_classes(db: Session, course_id: int):
     if not courses:
         raise HTTPException(
             status_code=403,
-            detail="No one course encountered",
+            detail="No one course found",
         )
     classes = db.query(Lesson).filter(Lesson.course_id == course_id).all()
     return classes
@@ -212,13 +212,13 @@ def download_file_of_class(db: Session, class_id: int):
     if not classroom:
         raise HTTPException(
             status_code=403,
-            detail="Class not encountered",
+            detail="Class not found",
         )
     file_path = Path(classroom.file_path_class)
     if not file_path.exists():
         raise HTTPException(
             status_code=404,
-            detail="The fisical file don't exists/It disappeared from the server.",
+            detail="The physical file don't exists/It disappeared from the server.",
         )
 
     return FileResponse(
