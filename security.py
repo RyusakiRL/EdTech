@@ -1,4 +1,4 @@
-"""Módulo responsável pela segurança, criptografia e geração de tokens JWT."""
+"""Module responsible for security, encryption, and JWT token generation."""
 
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
@@ -54,7 +54,7 @@ def verify_token(token: str = Depends(oauth2_scheme)):
 
     exception_not_authorized = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Crachá inválido ou expirado",
+        detail="Invalid or expired badge",
         headers={"WWW-Authenticate": "Bearer"},
     )
 

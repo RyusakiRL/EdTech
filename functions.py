@@ -10,9 +10,9 @@ from schemas import CoursesValidation, UserValidation
 from security import verify_password, generator_hash_password
 from security import create_token_jwt
 
-PASTA_UPLOADS = Path("uploads")
+UPLOADS_FOLDER = Path("uploads")
 
-PASTA_UPLOADS.mkdir(exist_ok=True)
+UPLOADS_FOLDER.mkdir(exist_ok=True)
 
 
 def create_students(student: UserValidation, db: Session):
@@ -178,7 +178,7 @@ def add_class_course(
             status_code=403,
             detail="Denied access: You do not own this course.",
         )
-    destin_path = PASTA_UPLOADS / file.filename
+    destin_path = UPLOADS_FOLDER / file.filename
     with destin_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
