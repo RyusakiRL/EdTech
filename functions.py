@@ -15,8 +15,18 @@ UPLOADS_FOLDER = Path("uploads")
 UPLOADS_FOLDER.mkdir(exist_ok=True)
 
 
-def create_students(student: UserValidation, db: Session):
+def create_employee(student: UserValidation, login_confirmation: str, db: Session):
     """Allow peoples for create a student to acess the courses"""
+    name_validation_manager = (
+        db.query(User).filter(User.id == login_confirmation.id).first()
+    )
+    if not name_validation_manager:
+        raise HTTPException(status_code=404, detail="manager not found")
+    if name_validation_manager.role_user != "security manager":
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only administrator can create instructors on plataform",
+        )
     student_existance = (
         db.query(User).filter(User.name_user == student.user_name).first()
     )
@@ -34,34 +44,36 @@ def create_students(student: UserValidation, db: Session):
     return {"message": "Welcome to our platform."}
 
 
-def create_instructor(instructor: UserValidation, login_confirmation: str, db: Session):
-    """Create a instructor route, responsability: manage grades, progress and courses"""
-    name_validation_admnistrator = (
+def create_security_manager(
+    security_manager: UserValidation, login_confirmation: str, db: Session
+):
+    """Create a security manager route, responsability: manage works, progress and others functions"""
+    name_validation_administrator = (
         db.query(User).filter(User.name_user == login_confirmation).first()
     )
-    if not name_validation_admnistrator:
-        raise HTTPException(status_code=404, detail="admnistrator not found")
-    if name_validation_admnistrator.role_user != "admnistrator":
+    if not name_validation_administrator:
+        raise HTTPException(status_code=404, detail="administrator not found")
+    if name_validation_administrator.role_user != "administrator":
         raise HTTPException(
             status_code=403,
-            detail="Access denied: only admnistrator can create instructors on plataform",
+            detail="Access denied: only administrator can create instructors on plataform",
         )
 
     instructor_existence = (
-        db.query(User).filter(User.name_user == instructor.user_name).first()
+        db.query(User).filter(User.name_user == security_manager.user_name).first()
     )
     if instructor_existence:
         raise HTTPException(status_code=400, detail="Name already exists: insert other")
-    encrypted_password = generator_hash_password(instructor.password_model)
-    new_instructor = User(
-        name_user=instructor.user_name,
+    encrypted_password = generator_hash_password(security_manager.password_model)
+    new_security_manager = User(
+        name_user=security_manager.user_name,
         password_user=encrypted_password,
-        role_user="instructor",
+        role_user="security manager",
     )
-    db.add(new_instructor)
+    db.add(new_security_manager)
     db.commit()
-    db.refresh(new_instructor)
-    return {"message": "Welcome to the new instructor"}
+    db.refresh(new_security_manager)
+    return {"message": "Welcome to the new security manager"}
 
 
 def login(db: Session, username: str, password: str):

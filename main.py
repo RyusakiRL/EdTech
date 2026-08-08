@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from functions import (
     create_course,
-    create_students,
-    create_instructor,
+    create_employee,
+    create_security_manager,
     create_registration,
     list_courses,
     login,
@@ -40,9 +40,9 @@ def login_route(
     return login(db=db, username=login_name, password=login_password)
 
 
-PASTA_UPLOADS = Path("uploads")
+FOLDER_UPLOADS = Path("uploads")
 
-PASTA_UPLOADS.mkdir(exist_ok=True)
+FOLDER_UPLOADS.mkdir(exist_ok=True)
 
 
 @app.post("/courses/{course_id}/class")
@@ -53,7 +53,7 @@ def receive_files_endpoint(
     username_login: str = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
-    """Receive the files in a past named upload"""
+    """Receive the files in a folder named upload"""
 
     return add_class_course(
         db=db,
@@ -70,7 +70,7 @@ def create_student_endpoint(
 ):
     """Pulic route to register students"""
 
-    return create_students(db=db, student=student_register)
+    return create_employee(db=db, student=student_register)
 
 
 @app.post("/registration/instructor")
@@ -80,8 +80,10 @@ def create_instructor_endpoint(
     db: Session = Depends(get_db),
 ):
     """Private route for admnistrators to registry new instructors"""
-    return create_instructor(
-        instructor=register_of_instructor, login_confirmation=username_login, db=db
+    return create_security_manager(
+        security_manager=register_of_instructor,
+        login_confirmation=username_login,
+        db=db,
     )
 
 
