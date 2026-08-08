@@ -66,11 +66,13 @@ def receive_files_endpoint(
 
 @app.post("/registration/student")
 def create_student_endpoint(
-    student_register: UserValidation, db: Session = Depends(get_db)
+    student_register: UserValidation,
+    login: str = Depends(verify_token),
+    db: Session = Depends(get_db),
 ):
     """Pulic route to register students"""
 
-    return create_employee(db=db, student=student_register)
+    return create_employee(db=db, login_confirmation=login, student=student_register)
 
 
 @app.post("/registration/instructor")
