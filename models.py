@@ -14,7 +14,7 @@ class User(Base):
     name_user = Column(String, nullable=False, unique=True, index=True)
     password_user = Column(String, nullable=False)
     role_user = Column(String, nullable=False)
-
+    my_number = Column(Integer, nullable=False)
     created_courses_relationship = relationship(
         "Course", back_populates="instructor_relationship"
     )
