@@ -3,31 +3,16 @@
 from pydantic import BaseModel, ConfigDict
 
 
-class UserValidation(BaseModel):
+class ManagerAdministratorValidation(BaseModel):
     """Data validation for user creation in SQL"""
 
-    user_name: str
+    name_user: str
     password_model: str
+    my_number: int
 
 
-class CoursesValidation(BaseModel):
-    """Data validation for courses creation in SQL"""
-
-    title_model: str
-    description_model: str
-
-
-class InstructorResponse(BaseModel):
-    """Response model for instructors list"""
+class OperatorValidation(BaseModel):
+    """Data validation for operator creation in SQL"""
 
     name_user: str
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ModelResponseCursos(BaseModel):
-    """Response model for data list of courses"""
-
-    course_title: str
-    description: str
-    instructor: InstructorResponse
-    model_config = ConfigDict(from_attributes=True)
+    my_number: int
