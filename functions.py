@@ -5,8 +5,17 @@ from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
-from models import Course, Registration, User, Lesson
-from schemas import CoursesValidation, UserValidation
+from models import (
+    User,
+    DailyInventory,
+    MonthlyPayroll,
+    TimeRecord,
+    Department,
+    Product,
+    Status,
+)
+from schemas import ManagerAdministratorValidation, OperatorValidation
+
 from security import verify_password, generator_hash_password
 from security import create_token_jwt
 
@@ -15,65 +24,84 @@ UPLOADS_FOLDER = Path("uploads")
 UPLOADS_FOLDER.mkdir(exist_ok=True)
 
 
-def create_employee(student: UserValidation, login_confirmation: str, db: Session):
-    """Allow peoples for create a student to acess the courses"""
+def create_employee(operator: OperatorValidation, login_confirmation: str, db: Session):
+    """Allow a manager to create a employee"""
     name_validation_manager = (
-        db.query(User).filter(User.id == login_confirmation.id).first()
+        db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not name_validation_manager:
         raise HTTPException(status_code=404, detail="manager not found")
-    if name_validation_manager.role_user != "security manager":
+    if name_validation_manager.role_user != Status.MANAGER:
         raise HTTPException(
             status_code=403,
-            detail="Access denied: only administrator can create instructors on plataform",
+            detail="Access denied: only manager can create operator on plataform",
         )
-    student_existance = (
-        db.query(User).filter(User.name_user == student.user_name).first()
+    operator_existence = (
+        db.query(User).filter(User.my_number == operator.my_number).first()
     )
-    if student_existance:
+    if operator_existence and operator_existence.is_active is True:
         raise HTTPException(
-            status_code=400, detail="Name already exists: please enter another one."
+            status_code=400,
+            detail="My number already exists: please enter another one.",
         )
-    password_cript = generator_hash_password(student.password_model)
-    new_student = User(
-        name_user=student.user_name, password_user=password_cript, role_user="student"
+    if operator_existence and operator_existence.is_active is False:
+        operator_existence.is_active = True
+        operator_existence.name_user = operator.name_user
+        db.commit()
+        db.refresh(operator_existence)
+        return {"message": "Welcome back to our enterprise."}
+    new_operator = User(
+        name_user=operator.name_user,
+        my_number=operator.my_number,
+        role_user=Status.OPERATOR,
     )
-    db.add(new_student)
+    db.add(new_operator)
     db.commit()
-    db.refresh(new_student)
-    return {"message": "Welcome to our platform."}
+    db.refresh(new_operator)
+    return {"message": "Welcome to our enterprise."}
 
 
-def create_security_manager(
-    security_manager: UserValidation, login_confirmation: str, db: Session
+def create_manager(
+    manager: ManagerAdministratorValidation, login_confirmation: str, db: Session
 ):
-    """Create a security manager route, responsability: manage works, progress and others functions"""
+    """Create a security manager route: manage works, progress and others functions"""
     name_validation_administrator = (
         db.query(User).filter(User.name_user == login_confirmation).first()
     )
     if not name_validation_administrator:
         raise HTTPException(status_code=404, detail="administrator not found")
-    if name_validation_administrator.role_user != "administrator":
+    if name_validation_administrator.role_user != Status.ADM:
         raise HTTPException(
             status_code=403,
-            detail="Access denied: only administrator can create instructors on plataform",
+            detail="Access denied: only administrator can create managers on plataform",
         )
 
-    instructor_existence = (
-        db.query(User).filter(User.name_user == security_manager.user_name).first()
+    manager_existence = (
+        db.query(User).filter(User.my_number == manager.my_number).first()
     )
-    if instructor_existence:
-        raise HTTPException(status_code=400, detail="Name already exists: insert other")
-    encrypted_password = generator_hash_password(security_manager.password_model)
-    new_security_manager = User(
-        name_user=security_manager.user_name,
+    if manager_existence and manager_existence.is_active is True:
+        raise HTTPException(
+            status_code=400, detail="My number already exists: insert other"
+        )
+    if manager_existence and manager_existence.is_active is False:
+        manager_existence.is_active = True
+        manager_existence.name_user = manager.name_user
+        encrypted_password = generator_hash_password(manager.password_model)
+        manager_existence.password_user = encrypted_password
+        db.commit()
+        db.refresh(manager_existence)
+        return {"message": "Welcome back to our enterprise."}
+    encrypted_password = generator_hash_password(manager.password_model)
+    new_manager = User(
+        name_user=manager.name_user,
         password_user=encrypted_password,
-        role_user="security manager",
+        role_user=Status.MANAGER,
+        my_number=manager.my_number,
     )
-    db.add(new_security_manager)
+    db.add(new_manager)
     db.commit()
-    db.refresh(new_security_manager)
-    return {"message": "Welcome to the new security manager"}
+    db.refresh(new_manager)
+    return {"message": "Welcome to the new manager"}
 
 
 def login(db: Session, username: str, password: str):
@@ -86,153 +114,3 @@ def login(db: Session, username: str, password: str):
         raise HTTPException(status_code=400, detail="Invalid credential")
     token = create_token_jwt({"sub": existence.name_user})
     return {"access_token": token, "token_type": "bearer"}
-
-
-def create_course(login_confirmation: str, db: Session, course_data: CoursesValidation):
-    """The instructor can create a course, and block others roles to create a course"""
-    instructor_name_validation = (
-        db.query(User).filter(User.name_user == login_confirmation).first()
-    )
-    if not instructor_name_validation:
-        raise HTTPException(status_code=404, detail="Instructor not found")
-    if not instructor_name_validation.role_user == "instructor":
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: only instructors can create courses",
-        )
-    new_course = Course(
-        course_title=course_data.title_model,
-        description=course_data.description_model,
-        id_instructor=instructor_name_validation.id,
-    )
-    db.add(new_course)
-    db.commit()
-    db.refresh(new_course)
-    return {"message": "Course created with sucess"}
-
-
-def create_registration(login_confirmation: str, course_name: str, db: Session):
-    """Enable students to enroll in existing courses."""
-    student_existence = (
-        db.query(User).filter(User.name_user == login_confirmation).first()
-    )
-    if not student_existence:
-        raise HTTPException(
-            status_code=403,
-            detail="Student not found",
-        )
-    if not student_existence.role_user == "student":
-        raise HTTPException(
-            status_code=403,
-            detail="Only students are allowed to registration in a class",
-        )
-
-    course_existence = (
-        db.query(Course).filter(Course.course_title == course_name).first()
-    )
-    if not course_existence:
-        raise HTTPException(status_code=404, detail="Course not found")
-    already_enrolled = (
-        db.query(Registration)
-        .filter(
-            Registration.student_id == student_existence.id,
-            Registration.course_id == course_existence.id,
-        )
-        .first()
-    )
-    if already_enrolled:
-        raise HTTPException(
-            status_code=403,
-            detail="Student already enrolled in this class",
-        )
-    new_registration = Registration(
-        student_id=student_existence.id, course_id=course_existence.id
-    )
-
-    db.add(new_registration)
-    db.commit()
-    db.refresh(new_registration)
-    return {"message": "Registration realized with success"}
-
-
-def list_courses(db: Session):
-    """Lists the courses for each teacher"""
-    courses_of_each_instructor = (
-        db.query(Course).options(joinedload(Course.instructor_relationship)).all()
-    )
-
-    return courses_of_each_instructor
-
-
-def add_class_course(
-    db: Session,
-    course_id: int,
-    class_title: str,
-    file: UploadFile,
-    username: str,
-):
-    """Uploads the file and links it to a course in the database."""
-    instructor_logged = db.query(User).filter(User.name_user == username).first()
-
-    if not instructor_logged or instructor_logged.role_user != "instructor":
-        raise HTTPException(
-            status_code=403,
-            detail="Denied access: only instructors",
-        )
-    target_course = db.query(Course).filter(Course.id == course_id).first()
-    if not target_course:
-        raise HTTPException(
-            status_code=403,
-            detail="Denied access: course not found",
-        )
-    if target_course.id_instructor != instructor_logged.id:
-        raise HTTPException(
-            status_code=403,
-            detail="Denied access: You do not own this course.",
-        )
-    destin_path = UPLOADS_FOLDER / file.filename
-    with destin_path.open("wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    new_class = Lesson(
-        classes_title=class_title,
-        file_path_class=str(destin_path),
-        course_id=target_course.id,
-    )
-    db.add(new_class)
-    db.commit()
-    db.refresh(new_class)
-    return {"message": f"Class '{class_title}' added with success in this course!"}
-
-
-def list_course_classes(db: Session, course_id: int):
-    """
-    Returns the list of lessons in JSON format linked to a specific course."""
-    courses = db.query(Course).filter(Course.id == course_id).first()
-    if not courses:
-        raise HTTPException(
-            status_code=403,
-            detail="No one course found",
-        )
-    classes = db.query(Lesson).filter(Lesson.course_id == course_id).all()
-    return classes
-
-
-def download_file_of_class(db: Session, class_id: int):
-    """Returns the file for viewing/downloading."""
-    classroom = db.query(Lesson).filter(Lesson.id == class_id).first()
-    if not classroom:
-        raise HTTPException(
-            status_code=403,
-            detail="Class not found",
-        )
-    file_path = Path(classroom.file_path_class)
-    if not file_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="The physical file don't exists/It disappeared from the server.",
-        )
-
-    return FileResponse(
-        path=file_path, filename=classroom.classes_title + file_path.suffix
-    )

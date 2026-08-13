@@ -20,7 +20,7 @@ Base = declarative_base()
 class Status(enum.Enum):
     """Template for accept restricts strings"""
 
-    ADM = "administrator"
+    ADMINISTRATOR = "administrator"
     MANAGER = "manager"
     OPERATOR = "operator"
 
@@ -35,7 +35,6 @@ class User(Base):
     role_user = Column(Enum(Status))
     my_number = Column(Integer, nullable=False, unique=True)
     is_active = Column(Boolean, nullable=False, default=True)
-    ic_card_id = Column(String, unique=True, nullable=True)
     manager_department_relationship = relationship(
         "Department", back_populates="manager_relationship"
     )
@@ -45,6 +44,7 @@ class User(Base):
     payment_relationship = relationship(
         "MonthlyPayroll", back_populates="user_payment_relationship"
     )
+    card_relationship = relationship("Card", back_populates="user_card_relationship")
 
 
 class Department(Base):
@@ -52,7 +52,7 @@ class Department(Base):
 
     __tablename__ = "departments"
     id = Column(Integer, primary_key=True, index=True)
-    id_manager = Column(Integer, ForeignKey("users.id"), nullable=False)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     department_title = Column(String, nullable=False)
     manager_relationship = relationship(
         "User", back_populates="manager_department_relationship"
@@ -70,7 +70,7 @@ class TimeRecord(Base):
         Integer,
         primary_key=True,
     )
-    employee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     clock_in = Column(DateTime, nullable=False)
     clock_out = Column(DateTime, nullable=True)
@@ -85,7 +85,7 @@ class MonthlyPayroll(Base):
 
     __tablename__ = "monthly_payroll"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     datetime_payment = Column(DateTime, nullable=False)
     base_salary = Column(Float, nullable=False)
     overtime_pay = Column(Float, nullable=False)
@@ -100,7 +100,7 @@ class DailyInventory(Base):
 
     __tablename__ = "daily_inventory"
     id = Column(Integer, primary_key=True, index=True)
-    department_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
+    departments_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
     created_at = Column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
@@ -131,3 +131,14 @@ class Product(Base):
     inventory_relationship = relationship(
         "DailyInventory", back_populates="product_relationship"
     )
+
+
+class Card(Base):
+    """Template for creation of cards"""
+
+    __tablename__ = "cards"
+    id = Column(Integer, primary_key=True, index=True)
+    card_number = Column(String, nullable=False, unique=True)
+    card_status = Column(Boolean, default=True)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_card_relationship = relationship("User", back_populates="card_relationship")
