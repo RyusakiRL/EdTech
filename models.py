@@ -1,10 +1,28 @@
 """Table creation templates in SQL"""
 
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Integer, String, ForeignKey, Column, DateTime, Float, Boolean
 from datetime import datetime, timezone
+import enum
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import (
+    Integer,
+    String,
+    ForeignKey,
+    Column,
+    DateTime,
+    Float,
+    Boolean,
+    Enum,
+)
 
 Base = declarative_base()
+
+
+class Status(enum.Enum):
+    """Template for accept restricts strings"""
+
+    ADM = "administrator"
+    MANAGER = "manager"
+    OPERATOR = "operator"
 
 
 class User(Base):
@@ -13,10 +31,11 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     name_user = Column(String, nullable=False, unique=False, index=True)
-    password_user = Column(String, nullable=False)
-    role_user = Column(String, nullable=False)
+    password_user = Column(String, nullable=True)
+    role_user = Column(Enum(Status))
     my_number = Column(Integer, nullable=False, unique=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    ic_card_id = Column(String, unique=True, nullable=True)
     manager_department_relationship = relationship(
         "Department", back_populates="manager_relationship"
     )
@@ -68,7 +87,9 @@ class MonthlyPayroll(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     datetime_payment = Column(DateTime, nullable=False)
-    salary = Column(Float, nullable=False)
+    base_salary = Column(Float, nullable=False)
+    overtime_pay = Column(Float, nullable=False)
+    tax_deductions = Column(Float, nullable=False)
     user_payment_relationship = relationship(
         "User", back_populates="payment_relationship"
     )
@@ -88,9 +109,25 @@ class DailyInventory(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     product_in_stock = Column(Integer, nullable=False)
     product_to_come = Column(Integer, nullable=False)
-    product_removed = Column(Boolean, default=False)
+
     department_relationship = relationship(
         "Department", back_populates="inventory_relationship"
+    )
+    product_relationship = relationship(
+        "Product", back_populates="inventory_relationship"
+    )
+
+
+class Product(Base):
+    """Template for creation products names"""
+
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True, index=True)
+    product_name = Column(String, nullable=False)
+    product_removed = Column(Boolean, default=False)
+    inventory_relationship = relationship(
+        "DailyInventory", back_populates="product_relationship"
     )
