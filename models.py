@@ -131,6 +131,7 @@ class Product(Base):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True, index=True)
     product_name = Column(String, nullable=False)
+    base_price = Column(Float, nullable=False)
     product_removed = Column(Boolean, default=False)
     inventory_relationship = relationship(
         "CurrentInventory", back_populates="product_relationship"
@@ -158,6 +159,7 @@ class InventoryMovement(Base):
     )
     movement_type = Column(String, nullable=False)
     quantity = Column(Integer, nullable=False)
+    unit_price_at_transaction = Column(Float, nullable=False)
     timestamp = Column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )

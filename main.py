@@ -14,11 +14,13 @@ from functions import (
     department_creation,
     employee_demission,
     manager_demission,
+    product_creation,
 )
 from schemas import (
     DepartmentValidation,
     ManagerAdministratorValidation,
     OperatorValidation,
+    ProductValidation,
 )
 from security import verify_token
 
@@ -101,4 +103,16 @@ def demission_manager_route(
     """Route to demission a manager"""
     return manager_demission(
         my_number=my_number, login_confirmation=login_confirmation, db=db
+    )
+
+
+@app.post("/create_product")
+def create_product_route(
+    product: ProductValidation,
+    login_confirmation: str = Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    """Route to create a product"""
+    return product_creation(
+        product_validation=product, login_confirmation=login_confirmation, db=db
     )
