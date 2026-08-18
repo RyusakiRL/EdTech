@@ -16,3 +16,10 @@ class OperatorValidation(BaseModel):
 
     name_user: str
     my_number: int
+
+
+class DepartmentValidation(BaseModel):
+    """Data validation for department creation in SQL"""
+
+    department_title: str
+    users_id: int
