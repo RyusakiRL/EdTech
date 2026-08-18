@@ -54,11 +54,12 @@ class Department(Base):
     id = Column(Integer, primary_key=True, index=True)
     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     department_title = Column(String, nullable=False)
+    department_removed = Column(Boolean, default=False)
     manager_relationship = relationship(
         "User", back_populates="manager_department_relationship"
     )
     inventory_relationship = relationship(
-        "DailyInventory", back_populates="department_relationship"
+        "CurrentInventory", back_populates="department_relationship"
     )
 
 
@@ -95,10 +96,10 @@ class MonthlyPayroll(Base):
     )
 
 
-class DailyInventory(Base):
+class CurrentInventory(Base):
     """Table template for enterprise products inventory"""
 
-    __tablename__ = "daily_inventory"
+    __tablename__ = "current_inventory"
     id = Column(Integer, primary_key=True, index=True)
     departments_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
     created_at = Column(
@@ -119,6 +120,9 @@ class DailyInventory(Base):
     product_relationship = relationship(
         "Product", back_populates="inventory_relationship"
     )
+    movement_relationship = relationship(
+        "InventoryMovement", back_populates="current_inventory_relationship"
+    )
 
 
 class Product(Base):
@@ -129,7 +133,7 @@ class Product(Base):
     product_name = Column(String, nullable=False)
     product_removed = Column(Boolean, default=False)
     inventory_relationship = relationship(
-        "DailyInventory", back_populates="product_relationship"
+        "CurrentInventory", back_populates="product_relationship"
     )
 
 
@@ -142,3 +146,21 @@ class Card(Base):
     card_status = Column(Boolean, default=True)
     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user_card_relationship = relationship("User", back_populates="card_relationship")
+
+
+class InventoryMovement(Base):
+    """Table template for inventory movement"""
+
+    __tablename__ = "inventory_movements"
+    id = Column(Integer, primary_key=True, index=True)
+    current_inventory_id = Column(
+        Integer, ForeignKey("current_inventory.id"), nullable=False
+    )
+    movement_type = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    timestamp = Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    current_inventory_relationship = relationship(
+        "CurrentInventory", back_populates="movement_relationship"
+    )

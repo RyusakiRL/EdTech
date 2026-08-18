@@ -4,17 +4,22 @@ import shutil
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 from models import (
     User,
-    DailyInventory,
+    CurrentInventory,
     MonthlyPayroll,
     TimeRecord,
     Department,
     Product,
     Status,
 )
-from schemas import ManagerAdministratorValidation, OperatorValidation
+from schemas import (
+    ManagerAdministratorValidation,
+    OperatorValidation,
+    DepartmentValidation,
+)
 
 from security import verify_password, generator_hash_password
 from security import create_token_jwt
@@ -22,6 +27,8 @@ from security import create_token_jwt
 UPLOADS_FOLDER = Path("uploads")
 
 UPLOADS_FOLDER.mkdir(exist_ok=True)
+
+NORMAL_OPERATOR_SALARY_HOUR = 1200.00
 
 
 def create_employee(operator: OperatorValidation, login_confirmation: str, db: Session):
@@ -70,7 +77,7 @@ def create_manager(
     )
     if not name_validation_administrator:
         raise HTTPException(status_code=404, detail="administrator not found")
-    if name_validation_administrator.role_user != Status.ADM:
+    if name_validation_administrator.role_user != Status.ADMINISTRATOR:
         raise HTTPException(
             status_code=403,
             detail="Access denied: only administrator can create managers on plataform",
@@ -112,5 +119,103 @@ def login(db: Session, username: str, password: str):
     verified_password = verify_password(password, existence.password_user)
     if not verified_password:
         raise HTTPException(status_code=400, detail="Invalid credential")
+    if existence.is_active is False:
+        raise HTTPException(
+            status_code=403, detail="Access denied: user is not active on plataform"
+        )
     token = create_token_jwt({"sub": existence.name_user})
     return {"access_token": token, "token_type": "bearer"}
+
+
+def employee_demission(db: Session, my_number: int, login_confirmation: str):
+    """Allow a manager to demission a employee"""
+    name_validation_manager = (
+        db.query(User).filter(User.name_user == login_confirmation).first()
+    )
+    if not name_validation_manager:
+        raise HTTPException(status_code=404, detail="manager not found")
+    if (
+        name_validation_manager.role_user != Status.MANAGER
+        or name_validation_manager.is_active is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only manager can demission operator on plataform",
+        )
+    employee_existence = db.query(User).filter(User.my_number == my_number).first()
+    if not employee_existence or employee_existence.is_active is not True:
+        raise HTTPException(status_code=404, detail="employee not found")
+    if employee_existence.role_user != Status.OPERATOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only operator can be demissioned on plataform",
+        )
+    employee_existence.is_active = False
+    db.commit()
+    db.refresh(employee_existence)
+    return {"message": "Employee demissioned successfully."}
+
+
+def manager_demission(db: Session, my_number: int, login_confirmation: str):
+    """Allow a administrator to demission a manager"""
+    name_validation_administrator = (
+        db.query(User).filter(User.name_user == login_confirmation).first()
+    )
+    if not name_validation_administrator:
+        raise HTTPException(status_code=404, detail="administrator not found")
+    if name_validation_administrator.role_user != Status.ADMINISTRATOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only administrator can demission manager on plataform",
+        )
+    manager_existence = db.query(User).filter(User.my_number == my_number).first()
+    if not manager_existence or manager_existence.is_active is not True:
+        raise HTTPException(status_code=404, detail="manager not found")
+    if manager_existence.role_user != Status.MANAGER:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only manager can be demissioned on plataform",
+        )
+    manager_existence.is_active = False
+    db.commit()
+    db.refresh(manager_existence)
+    return {"message": "Manager demissioned successfully."}
+
+
+def department_creation(
+    department_validation: DepartmentValidation, login_confirmation: str, db: Session
+):
+    """Allow a administrator to create a department"""
+    name_validation_administrator = (
+        db.query(User).filter(User.name_user == login_confirmation).first()
+    )
+    if not name_validation_administrator:
+        raise HTTPException(status_code=404, detail="administrator not found")
+    if (
+        name_validation_administrator.role_user != Status.ADMINISTRATOR
+        or name_validation_administrator.is_active is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only administrator can create department on plataform",
+        )
+    if not department_validation.department_title:
+        raise HTTPException(status_code=400, detail="Department title is required.")
+
+    user = db.query(User).filter(User.id == department_validation.users_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if user.role_user != Status.MANAGER or user.is_active is False:
+        raise HTTPException(
+            status_code=400,
+            detail="Only managers can be assigned to a department.",
+        )
+
+    new_department = Department(
+        users_id=department_validation.users_id,
+        department_title=department_validation.department_title,
+    )
+    db.add(new_department)
+    db.commit()
+    db.refresh(new_department)
+    return {"message": "Department created successfully."}
