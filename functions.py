@@ -19,6 +19,7 @@ from schemas import (
     ManagerAdministratorValidation,
     OperatorValidation,
     DepartmentValidation,
+    ProductValidation,
 )
 
 from security import verify_password, generator_hash_password
@@ -199,8 +200,6 @@ def department_creation(
             status_code=403,
             detail="Access denied: only administrator can create department on plataform",
         )
-    if not department_validation.department_title:
-        raise HTTPException(status_code=400, detail="Department title is required.")
 
     user = db.query(User).filter(User.id == department_validation.users_id).first()
     if not user:
@@ -219,3 +218,31 @@ def department_creation(
     db.commit()
     db.refresh(new_department)
     return {"message": "Department created successfully."}
+
+
+def product_creation(
+    product_validation: ProductValidation, login_confirmation: str, db: Session
+):
+    """Allow a manager to create a product"""
+    name_validation_manager = (
+        db.query(User).filter(User.name_user == login_confirmation).first()
+    )
+    if not name_validation_manager:
+        raise HTTPException(status_code=404, detail="manager not found")
+    if (
+        name_validation_manager.role_user != Status.MANAGER
+        or name_validation_manager.is_active is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: only manager can create product on plataform",
+        )
+
+    new_product = Product(
+        product_name=product_validation.product_name,
+        base_price=product_validation.base_price,
+    )
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return {"message": "Product created successfully."}
