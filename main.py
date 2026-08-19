@@ -15,12 +15,14 @@ from functions import (
     employee_demission,
     manager_demission,
     product_creation,
+    create_inventory_movement,
 )
 from schemas import (
     DepartmentValidation,
     ManagerAdministratorValidation,
     OperatorValidation,
     ProductValidation,
+    InventoryMovementValidation,
 )
 from security import verify_token
 
@@ -51,7 +53,7 @@ FOLDER_UPLOADS.mkdir(exist_ok=True)
 @app.post("/create_employee")
 def create_employee_route(
     operator: OperatorValidation,
-    login_confirmation: str = Depends(verify_token),
+    login_confirmation: int = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Route to create a employee"""
@@ -63,7 +65,7 @@ def create_employee_route(
 @app.post("/create_manager")
 def create_manager_route(
     manager: ManagerAdministratorValidation,
-    login_confirmation: str = Depends(verify_token),
+    login_confirmation: int = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Route to create a manager"""
@@ -109,10 +111,24 @@ def demission_manager_route(
 @app.post("/create_product")
 def create_product_route(
     product: ProductValidation,
-    login_confirmation: str = Depends(verify_token),
+    login_confirmation: int = Depends(verify_token),
     db: Session = Depends(get_db),
 ):
     """Route to create a product"""
     return product_creation(
         product_validation=product, login_confirmation=login_confirmation, db=db
+    )
+
+
+@app.post("/create_inventory_movement")
+def create_inventory_movement_route(
+    inventory_movement: InventoryMovementValidation,
+    login_confirmation: int = Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    """Route to create an inventory movement"""
+    return create_inventory_movement(
+        inventory_movement_validation=inventory_movement,
+        login_confirmation=login_confirmation,
+        db=db,
     )
