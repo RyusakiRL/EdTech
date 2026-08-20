@@ -39,3 +39,9 @@ class InventoryMovementValidation(BaseModel):
     departments_id: int
     movement_type: str = Field(description="Must be 'IN' or 'OUT'")
     quantity: int = Field(gt=0, description="Quantity must be greater than zero")
+
+
+class CardValidation(BaseModel):
+    """Data validation for card creation in SQL"""
+
+    users_id: int

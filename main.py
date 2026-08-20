@@ -16,6 +16,7 @@ from functions import (
     manager_demission,
     product_creation,
     create_inventory_movement,
+    card_creation,
 )
 from schemas import (
     DepartmentValidation,
@@ -23,6 +24,7 @@ from schemas import (
     OperatorValidation,
     ProductValidation,
     InventoryMovementValidation,
+    CardValidation,
 )
 from security import verify_token
 
@@ -129,6 +131,20 @@ def create_inventory_movement_route(
     """Route to create an inventory movement"""
     return create_inventory_movement(
         inventory_movement_validation=inventory_movement,
+        login_confirmation=login_confirmation,
+        db=db,
+    )
+
+
+@app.post("/create_card")
+def create_card_route(
+    card_validation: CardValidation,
+    login_confirmation: int = Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    """Route to create a card"""
+    return card_creation(
+        card_validation=card_validation,
         login_confirmation=login_confirmation,
         db=db,
     )
