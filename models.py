@@ -14,6 +14,7 @@ from sqlalchemy import (
     Enum,
 )
 
+NORMAL_OPERATOR_SALARY_HOUR = 1200.00
 Base = declarative_base()
 
 

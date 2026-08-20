@@ -1,0 +1,21 @@
+"""Router for card management endpoints."""
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+from schemas import CardValidation
+from services.cards_service import card_creation
+
+router = APIRouter(prefix="/cards", tags=["Cards management"])
+
+
+@router.post("/create")
+def create_card(
+    card_validation: CardValidation,
+    login_confirmation: int,
+    db: Session = Depends(get_db),
+):
+    """Endpoint to create a card for a user."""
+    return card_creation(
+        card_validation=card_validation, login_confirmation=login_confirmation, db=db
+    )
