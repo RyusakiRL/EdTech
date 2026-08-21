@@ -14,7 +14,7 @@ router = APIRouter(prefix="/inventory", tags=["Inventory management"])
 
 
 @router.post("/department/create")
-def create_department(
+def create_department_route(
     department_validation: DepartmentValidation,
     login_confirmation: int,
     db: Session = Depends(get_db),
@@ -28,7 +28,7 @@ def create_department(
 
 
 @router.post("/product/create")
-def create_product(
+def create_product_route(
     product_validation: ProductValidation,
     login_confirmation: int,
     db: Session = Depends(get_db),
@@ -42,7 +42,7 @@ def create_product(
 
 
 @router.post("/movement/create")
-def create_inventory_movement(
+def create_inventory_movement_route(
     inventory_movement_validation: InventoryMovementValidation,
     login_confirmation: int,
     db: Session = Depends(get_db),
