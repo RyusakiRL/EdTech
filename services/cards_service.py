@@ -49,3 +49,44 @@ def card_creation(
         "message": "Card created successfully.",
         "qr_code": generated_card_number_qr_code,
     }
+
+
+def card_disable(card_id: int, login_confirmation: int, db: Session):
+    """Allow a manager to disable a card"""
+    creator = db.query(User).filter(User.my_number == login_confirmation).first()
+    if not creator or creator.is_active is False:
+        raise HTTPException(status_code=404, detail="User not found or inactive.")
+    card = db.query(Card).filter(Card.id == card_id).first()
+
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found.")
+
+    card_user = db.query(User).filter(User.id == card.users_id).first()
+
+    if not card_user or card_user.is_active is False:
+        raise HTTPException(status_code=404, detail="User not found or inactive.")
+
+    if card_user.role_user == Status.ADMINISTRATOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: cannot disable cards for administrators.",
+        )
+    if creator.role_user != Status.MANAGER and card_user.role_user == Status.OPERATOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: managers can only disable cards for operators.",
+        )
+
+    if (
+        creator.role_user != Status.ADMINISTRATOR
+        and card_user.role_user == Status.MANAGER
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: administrators can only disable cards for managers.",
+        )
+
+    card.card_status = False
+    db.commit()
+
+    return {"message": "Card disabled successfully."}
