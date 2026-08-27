@@ -1,28 +1,42 @@
 """Data validation based em class models"""
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class ManagerAdministratorValidation(BaseModel):
     """Data validation for manager and administrator creation in SQL"""
 
     name_user: str = Field(min_length=3, max_length=50)
-    password_model: str
-    my_number: int
+    password_model: str = Field(min_length=8, max_length=50)
+    my_number: str = Field(
+        min_length=12,
+        max_length=12,
+        pattern=r"^\d{12}$",
+        description="Japanese My Number: exactly 12 numeric digits",
+    )
 
 
 class OperatorValidation(BaseModel):
     """Data validation for operator creation in SQL"""
 
     name_user: str = Field(min_length=3, max_length=50)
-    my_number: int
+    password_model: str = Field(min_length=8, max_length=50)
+    my_number: str = Field(
+        min_length=12,
+        max_length=12,
+        pattern=r"^\d{12}$",
+        description="Japanese My Number: exactly 12 numeric digits",
+    )
 
 
 class DepartmentValidation(BaseModel):
     """Data validation for department creation in SQL"""
 
     department_title: str = Field(min_length=3, max_length=100)
-    users_id: int
+    users_id: int = Field(gt=0, description="User ID must be a positive integer")
 
 
 class ProductValidation(BaseModel):
@@ -35,13 +49,32 @@ class ProductValidation(BaseModel):
 class InventoryMovementValidation(BaseModel):
     """Data validation for moving products in/out of inventory"""
 
-    product_id: int
-    departments_id: int
-    movement_type: str = Field(description="Must be 'IN' or 'OUT'")
+    product_id: int = Field(gt=0, description="Product ID must be a positive integer")
+    departments_id: int = Field(
+        gt=0, description="Department ID must be a positive integer"
+    )
+    movement_type: Literal["IN", "OUT"] = Field(
+        description="Movement type must be 'IN' or 'OUT'"
+    )
     quantity: int = Field(gt=0, description="Quantity must be greater than zero")
 
 
 class CardValidation(BaseModel):
     """Data validation for card creation in SQL"""
 
-    users_id: int
+    users_id: int = Field(gt=0, description="User ID must be a positive integer")
+
+
+class RequiredColumns(BaseModel):
+    """Data validation for required columns in Excel file"""
+
+    name: str = Field(min_length=3, max_length=100)
+    price: float = Field(gt=0, description="Price must be greater than zero")
+    quantity: int = Field(gt=0, description="Quantity must be greater than zero")
+    timestamp: datetime = Field(description="Timestamp must be in ISO 8601 format")
+    movement_type: Literal["IN", "OUT"] = Field(
+        description="Movement type must be 'IN' or 'OUT'"
+    )
+    department_id: int = Field(
+        gt=0, description="Department ID must be a positive integer"
+    )
