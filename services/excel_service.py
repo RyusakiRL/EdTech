@@ -4,9 +4,10 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 import pandas as pd
+from pydantic import ValidationError
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
-
+from schemas import RequiredColumns
 
 from models import CurrentInventory, InventoryMovement, Product, Status, User
 
@@ -38,27 +39,28 @@ def process_inventory_excel(file: UploadFile, login_confirmation: int, db: Sessi
         df = pd.read_excel(file_path)
 
         df = df.dropna(how="all")
-
+        df = df.replace({pd.NA: None})
         records = df.to_dict(orient="records")
 
         added_products = 0
         movements_recorded = 0
-        for row in records:
-            p_name = row.get("name")
-            if pd.isna(p_name):
+        spreadsheet_errors = []
+        for index, row in enumerate(
+            records, start=2
+        ):  # Start at 2 to account for header row
+            try:
+                valid_data = RequiredColumns(**row)
+            except ValidationError as e:
+                spreadsheet_errors.append({"excel_row": index, "errors": e.errors()})
                 continue
+            p_name = valid_data.name
+            p_quantity = valid_data.quantity
+            p_datetime = valid_data.timestamp
 
-            p_price = row.get("price", 0.0)
-            p_quantity = row.get("quantity", 0)
-            p_datetime = row.get("timestamp")
-            raw_movement = row.get("movement_type")
-            p_movement_type = (
-                str(raw_movement).upper() if pd.notna(raw_movement) else "UNKNOWN"
-            )
-            realdatetime = (
-                p_datetime if pd.notna(p_datetime) else datetime.now(timezone.utc)
-            )
+            p_movement_type = valid_data.movement_type
 
+            p_price = valid_data.price
+            dept_id = valid_data.department_id
             product = db.query(Product).filter_by(product_name=p_name).first()
             if not product:
                 product = Product(
@@ -70,15 +72,13 @@ def process_inventory_excel(file: UploadFile, login_confirmation: int, db: Sessi
                 added_products += 1
             inventory = (
                 db.query(CurrentInventory)
-                .filter_by(
-                    product_id=product.id, departments_id=row.get("department_id")
-                )
+                .filter_by(product_id=product.id, departments_id=dept_id)
                 .first()
             )
             if not inventory:
                 inventory = CurrentInventory(
                     product_id=product.id,
-                    departments_id=row.get("department_id"),
+                    departments_id=dept_id,
                     product_in_stock=0,
                     product_to_come=0,
                 )
@@ -92,16 +92,19 @@ def process_inventory_excel(file: UploadFile, login_confirmation: int, db: Sessi
                     movement_type="IN",
                     quantity=p_quantity,
                     unit_price_at_transaction=p_price,
-                    timestamp=realdatetime,
+                    timestamp=p_datetime,
                 )
                 db.add(movement)
                 movements_recorded += 1
-            elif p_movement_type == "OUT" and p_quantity > 0:
+            if p_movement_type == "OUT" and p_quantity > 0:
                 if inventory.product_in_stock < p_quantity:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Insufficient stock for product '{p_name}' to record OUT movement.",
+                    spreadsheet_errors.append(
+                        {
+                            "excel_row": index,
+                            "errors": f"Insufficient stock for product '{p_name}'",
+                        }
                     )
+                    continue
                 inventory.product_in_stock -= p_quantity
 
                 movement = InventoryMovement(
@@ -109,21 +112,18 @@ def process_inventory_excel(file: UploadFile, login_confirmation: int, db: Sessi
                     movement_type="OUT",
                     quantity=p_quantity,
                     unit_price_at_transaction=p_price,
-                    timestamp=realdatetime,
+                    timestamp=p_datetime,
                 )
                 db.add(movement)
                 movements_recorded += 1
-            else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid movement type '{p_movement_type}' for product '{p_name}'. Must be 'IN' or 'OUT'.",
-                )
+
         db.commit()
         return {
             "message": "Upload, inventory update and auditing completed successfully!",
             "rows_processed": len(records),
             "new_products_cataloged": added_products,
             "inventory_movements_recorded": movements_recorded,
+            "error_found": spreadsheet_errors,
         }
 
     except Exception as e:
