@@ -10,7 +10,7 @@ ADM_NAME = str(input("Input the name of new system administrator: "))
 ADM_PASSWORD = str(input("Input the password of new system administrator: "))
 ADM_NUMBER = int(input("Input the number of new system administrator: "))
 new_administrator = ManagerAdministratorValidation(
-    name_user=ADM_NAME, password_model=ADM_PASSWORD, my_number=ADM_NUMBER
+    name_user=ADM_NAME, password_user=ADM_PASSWORD, my_number=ADM_NUMBER
 )
 db = next(get_db())
 
@@ -25,7 +25,7 @@ def new_server_administrator(
     if adm_existence and adm_existence.is_active is True:
         print("This number already exists input a other number")
     else:
-        hashed_password = generator_hash_password(new_adm.password_model)
+        hashed_password = generator_hash_password(new_adm.password_user)
 
         creation_of_new_administrator = User(
             name_user=new_adm.name_user,

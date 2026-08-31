@@ -10,7 +10,7 @@ class ManagerAdministratorValidation(BaseModel):
     """Data validation for manager and administrator creation in SQL"""
 
     name_user: str = Field(min_length=3, max_length=50)
-    password_model: str = Field(min_length=8, max_length=50)
+    password_user: str = Field(min_length=8, max_length=50)
     my_number: str = Field(
         min_length=12,
         max_length=12,
@@ -23,7 +23,7 @@ class OperatorValidation(BaseModel):
     """Data validation for operator creation in SQL"""
 
     name_user: str = Field(min_length=3, max_length=50)
-    password_model: str = Field(min_length=8, max_length=50)
+    password_user: str = Field(min_length=8, max_length=50)
     my_number: str = Field(
         min_length=12,
         max_length=12,
