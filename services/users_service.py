@@ -49,7 +49,7 @@ def create_manager(
 ):
     """Create a security manager route: manage works, progress and others functions"""
     name_validation_administrator = (
-        db.query(User).filter(User.name_user == login_confirmation).first()
+        db.query(User).filter(User.my_number == login_confirmation).first()
     )
     if not name_validation_administrator:
         raise HTTPException(status_code=404, detail="administrator not found")
@@ -69,12 +69,12 @@ def create_manager(
     if manager_existence and manager_existence.is_active is False:
         manager_existence.is_active = True
         manager_existence.name_user = manager.name_user
-        encrypted_password = generator_hash_password(manager.password_model)
+        encrypted_password = generator_hash_password(manager.password_user)
         manager_existence.password_user = encrypted_password
         db.commit()
         db.refresh(manager_existence)
         return {"message": "Welcome back to our enterprise."}
-    encrypted_password = generator_hash_password(manager.password_model)
+    encrypted_password = generator_hash_password(manager.password_user)
     new_manager = User(
         name_user=manager.name_user,
         password_user=encrypted_password,

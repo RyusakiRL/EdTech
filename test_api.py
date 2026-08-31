@@ -1,10 +1,12 @@
+"""System tests"""
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from main import app
 from database import get_db
-from models import Base
+from models import Base, User, Status
 
 # 1. Criamos um banco de dados temporário em memória para o teste (SQLite)
 # Assim não mexemos no seu PostgreSQL do Docker!
@@ -38,39 +40,30 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
 
 
-# --- OS TESTES REAIS ---
-
-
-def test_criar_estudante_com_sucesso():
-    """Garante que a rota pública de registro de alunos funciona"""
-    dados_aluno = {"nome_user": "aluno_teste", "senha": "senha_segura_123"}
-
-    # Simula um disparo de POST na sua rota
-    resposta = client.post("/registro/aluno", json=dados_aluno)
-
-    # Validações (Asserts)
-    assert resposta.status_code == 200
-    assert resposta.json() == {"mensagem": "Seja bem vindo a nossa plataforma"}
-
-
-def test_impedir_estudante_de_criar_curso():
-    """Garante que a trava de segurança (RBAC) bloqueia quem não é instrutor"""
-    # 1. Primeiro criamos um aluno
-    client.post(
-        "/registro/aluno", json={"nome_user": "estudante_invasor", "senha": "123"}
+def test_deny_user_creation_without_perm(setup_database):
+    """Prevents anyone other than an administrator from creating a manager"""
+    db = TestingSessionLocal()
+    normal_employee = User(
+        name_user="Operador Teste",
+        my_number="123456789012",
+        role_user=Status.OPERATOR,
+        is_active=True,
     )
+    db.add(normal_employee)
+    db.commit()
+    db.close()
 
-    # 2. Pegamos o token dele fazendo login
-    resposta_login = client.post(
-        "/login", data={"username": "estudante_invasor", "password": "123"}
+    new_manager_data = {
+        "name_user": "New Manager",
+        "password_user": "senhaforte123",
+        "my_number": "999888777666",
+    }
+
+    response = client.post(
+        "/users/manager/create?login_confirmation=123456789012", json=new_manager_data
     )
-    token = resposta_login.json()["access_token"]
-
-    # 3. Tentamos criar um curso usando o cabeçalho de segurança (Token) desse aluno
-    dados_curso = {"titulo": "Curso Hacker", "descricao": "Tentando burlar o sistema"}
-
-    headers = {"Authorization": f"Bearer {token}"}
-    resposta_curso = client.post("/registro/curso", json=dados_curso, headers=headers)
-
-    # Validação de Ouro: O sistema TEM que dar erro 403 (Acesso Negado)
-    assert resposta_curso.status_code == 403
+    assert response.status_code == 403
+    assert (
+        response.json()["detail"]
+        == "Access denied: only administrator can create managers on plataform"
+    )
